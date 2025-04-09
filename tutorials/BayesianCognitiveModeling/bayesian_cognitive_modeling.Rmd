@@ -1,0 +1,688 @@
+---
+title: "Bayesian Cognitive Modeling"
+subtitle: "Tutorial"
+author: "Linus Hof, Nuno Busch"
+date: "`r Sys.time()`"
+format: 
+  html:
+    keep-md: true
+editor_options: 
+  markdown: 
+    wrap: sentence
+  chunk_output_type: console
+---
+
+```{r include=FALSE}
+# packages 
+pacman::p_load(readxl , 
+               tidyverse , 
+               magrittr , 
+               knitr, 
+               here
+               )
+```
+
+```{r include=FALSE}
+here::i_am("tutorials/BayesianCognitiveModeling/bayesian_cognitive_modeling.Rmd")
+```
+
+
+## Risky Choice
+
+When making decisions under risk, choosing an option does not always lead to the same outcome.
+Instead, choosing an option can lead to one of several outcomes with some probability. 
+Consider the following risky choice problem from a study of Kellen et al. (2016), involving two options, $A$ and $B$. 
+The different columns represent different features of both options.
+
+```{r}
+#| echo: false
+#| output: false
+
+# read data
+problems <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 1) # problem features
+description <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE) # DFD choices 
+
+# clean data
+
+problems %<>% 
+  select(-c(`...7`,`...8`,`...13`,`...14`)) %>% 
+  mutate(domain = case_when(outcomeA1 >= 0 & outcomeA2 >= 0 & outcomeB1 >= 0 & outcomeB2 >= 0 ~ "Gain" , 
+                            outcomeA1 <= 0 & outcomeA2 <= 0 & outcomeB1 <= 0 & outcomeB2 <= 0 ~ "Loss" , 
+                            .default = "Mixed"))  %>% 
+  select( problem, label, domain, everything()) %>% 
+  arrange(domain)
+
+description  %<>% rename(label = ...1)
+```
+
+
+
+```{r}
+#| eval: false
+
+# read data
+problems <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet=1) # problem features
+
+# clean data
+problems %<>% 
+  select(-c(`...7`,`...8`,`...13`,`...14`)) %>% 
+  mutate(domain = case_when(outcomeA1 >= 0 & outcomeA2 >= 0 & outcomeB1 >= 0 & outcomeB2 >= 0 ~ "Gain" , 
+                            outcomeA1 <= 0 & outcomeA2 <= 0 & outcomeB1 <= 0 & outcomeB2 <= 0 ~ "Loss" , 
+                            .default = "Mixed"))  %>% 
+  select( problem, label, domain, everything()) %>% 
+  arrange(domain)
+```
+
+
+```{r}
+kable(problems[1,])
+```
+
+For instance, `Option B` has two possible outcomes, indicated by `outcomeB1` and `outcomeB2`. 
+When choosing this option, one of the outcomes is obtained.
+Specifically, `outcomeB1`=`r problems[[1,'outcomeB1']]` occurs with `probB1``r problems[[1,'probB1']]` and `outcomeB2`=`r problems[[1,'outcomeB2']]` occurs with `probB2=``r problems[[1,'probB2']]`. 
+When choosing this option repeatedly, one therefore expects to obtain `4` most of the time, but sometimes also a `0`.
+To illustrate, we simulate choosing `Option B` 100 times. 
+
+```{r}
+sample(c(problems[[1,'outcomeB1']], problems[[1,'outcomeB2']]) , 
+       size=100 ,
+       replace = TRUE ,
+       prob=c(problems[[1,'probB1']], problems[[1,'probB2']]))
+```
+
+Turning to `Option A` always return, we notice that `outcomeA1`=`r problems[[1,'outcomeA1']]` occurs with `probA1`=`r problems[[1,'probA1']]` and `outcomeA2`=`r problems[[1,'outcomeA2']]` occurs with `probA2`=`r problems[[1,'probA2']]`.
+Thus, this option is effectively a safe option, where `outcomeA2` does not really exist and we instead always obtain a `3`.
+To illustrate, we also simulate choosing `Option A` 100 times. 
+
+```{r}
+sample(c(problems[[1,'outcomeA1']], problems[[1,'outcomeA2']]) , 
+       size=100 ,
+       replace = TRUE ,
+       prob=c(problems[[1,'probA1']], problems[[1,'probA2']]))
+```
+
+In a typical risky choice study, people are presented with the possible outcomes and probabilities of both options and need to decide which of the options they prefer. 
+However, most studies involve more than just one choice problem. 
+For instance, in the study by Kellen et al. (2016), participants were presented with `r nrow(problems)` different choice problems, each represented by a row in the table below. 
+Each problem is a unique combinations of the outcomes and probabilities for `Option A` and `Option B`.
+
+The column `domain` indicates whether all possible outcomes are $\geq 0$ (`Gain`), or whether all outcome are $\leq 0$ (`Loss`), or whether the problem involves some outcomes that are $>0$ and some that are a $<0$. 
+
+```{r}
+kable(problems)
+```
+
+
+## Expected Value Maximization
+
+According to a classical view, the rational way to make such decisions under risk is to choose the option with the highest expected value (EV), i.e., 
+
+$$
+\arg\max  EV = \sum_i^np_ix_i \; ,
+$$
+where $x_i$ are the possible outcome of the option and $p_i$ are their respective probabilities.
+That is, for each option, people should first multiple all outcomes by their probabilities and then sum up the products to obtain the EV.
+Then they should choose the option with the higher EV.
+The following code follows this procedure for all choice problems used by Kellen et al. (2016).
+
+
+```{r}
+problems %<>%  
+  mutate(ev_A = round( probA1*outcomeA1 + probA2*outcomeA2 , 2) , # computes EV of option A
+         ev_B = round( probB1*outcomeB1 + probB2*outcomeB2 , 2) , # computes EV of option B
+         # choose option A/0 when ev_A > ev_B, otherwise B/1: nothing when ev_A = ev_B
+         max_ev_det = case_when(ev_A > ev_B ~ 0 , # choose option A/0 when ev_A > b
+                                ev_A < ev_B ~ 1 , # ch
+                                ev_A == ev_B ~ NA )
+         )
+kable(head(problems))
+```
+
+One of the shortcomings of the idea of EV maximization is that people do not seem to do this. 
+Kellen et al. (2016) collected the choices of `r ncol(description)-1` on all of the `r nrow(description)` from above.
+To illustrate, the following table shows the choices of 10 participants (columns) on the first 10 problems. 
+
+
+```{r}
+#| echo: false
+#| output: false
+
+# read and clean data
+description <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE)
+description  %<>% rename(label = ...1)
+```
+
+```{r}
+#| eval: false
+
+# read and clean data
+description <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet = 3, col_names = TRUE)
+description  %<>% rename(label = ...1)
+```
+
+```{r}
+kable(description[1:10, 1:11])
+```
+
+Knowing for all problems whether `Option A` (`1`) or `Option B` (`0`) has the higher EV, we can compute the proportion of choices, in which participants chose the option with the higher EV. 
+
+```{r}
+problems <- problems %>%   
+  left_join(description, by = join_by(label)) %>% 
+  mutate(ev_max_obs = round ( case_when(max_ev_det == 0 ~ rowMeans(select(., `1_er171989`:`99_AA211989`), na.rm = TRUE)  , 
+                                        max_ev_det == 1 ~ 1 - rowMeans(select(., `1_er171989`:`99_AA211989`), na.rm = TRUE) 
+                                        ) , 2
+                              )
+         ) 
+
+problems %>% 
+  select(problem:max_ev_det, ev_max_obs) %>%
+  kable()
+```
+
+The last column of each row, `ev_max_ob`, shows the proportion of people which choose the option with the higher EV in the respective problem.
+It is easy to see, that people often deviate from strict EV maximization, sometimes very systematically.
+
+
+## Cumulative Prospect Theory: A Cognitive Model for Risky Choice
+
+One of the key developments in decision making research is the development of cumulative prospect theory (CPT), which aims to describe what choices people are actually making, if not maximizing the EV. 
+CPT retains the idea of EV maximization that people weight the outcomes of each option by their probability. 
+However, a core innovation is the assumption that people do not treat the outcomes and probabilities objectively as they are, but instead represent them subjectively in a way that they become distorted. 
+Mathematically, this is expressed by replacing the outcomes $x_i$ with subjective values $v(x_i)$ and replacing the probabilities with subjective decision weight $\pi_i$.
+
+$$
+\arg\max_x V = \sum_i^n v(x_i) \pi_i \; ,
+$$
+
+where $v(.)$ is a so-called value function and $\pi_i$ is obtained by transforming the probabilities with a probability weighting function $w(.)$.
+Next, we consider the value and the probability weighting function in more detail.
+
+### Value function
+
+The value function takes each objective outcome $x_i$ as input and returns a respective subjective value $v(x_i)$ as output, according to:
+
+$$
+v(x_i) = \begin{cases} 
+x_i^\alpha & x_i \geq 0 \; ,\\
+-\lambda |x_i|^\alpha & else
+\end{cases}
+$$
+where $\alpha$ is a number that usually takes values between $0$ and $1$, and $\lambda$ is a number $>0$ (free parameters).
+The figure below illustrates the form of this transformation when $\lambda = 1$, $\alpha = .9$, $\alpha = .8$.
+
+```{r}
+vf <- expand_grid(outcome = c(seq(-10, 10, .1)) , 
+                  alpha = seq(.8,1,.1)) %>% 
+  mutate(v = case_when(outcome >= 0 ~ outcome^alpha , 
+                       outcome < 0 ~ -1*(abs(outcome)^alpha) 
+                       )
+         ) 
+
+vf %>% ggplot(aes(outcome, v, group = as.factor(alpha), color=as.factor(alpha))) + 
+  geom_hline(yintercept = 0) + 
+  geom_vline(xintercept = 0) + 
+  geom_abline(slope=1, linetype='dashed', linewidth = 1, color = 'gray') + 
+  geom_line(linewidth = 1) + 
+  theme_minimal()
+```
+
+It can be seen that in the case of $\alpha = 1$ (blue line), all subjective values $v(x)$ are equal the objective outcomes $x$. 
+The smaller $\alpha$ gets, the more curved (concave) the graph gets, indicating that the same change in objective outcomes (on the x-axis) leads to a smaller change in the subjective values (on the y-axis), the more extreme (more positive/negative) the objective outcomes get.
+This is the usual form one obtains, when fitting the $\alpha$ parameter to the observed choices (see below).  
+
+### Weighting function
+
+The weighting function takes a probability* $p_i$ between $0$ and $1$ as input and returns a transformed probability $w(p_i)$ as output, according to:
+
+$$
+w(p_i) = \frac{\delta p_i^\gamma}{\delta p_i^\gamma + (1-p_i)^\gamma} \; ,
+$$
+where $\gamma$ is a number that usually takes values between $0$ and $2$ and $\delta$ is a number that usually takes values between $0$ and $5$. 
+The figure below illustrates the form of this transformation when $\gamma = .5$ or $\gamma = .8$, and when $\delta = .5$, $\delta = 1$ or $\delta=1.5$.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 3
+
+wf <- expand_grid(p = c(seq(0, 1, .01)) , 
+                  gamma = c(.5, 1, 1.5) , 
+                  delta = c(.5, 1, 1.5)) %>%
+  mutate(w = ( delta*(p^gamma) ) / (  (delta*(p^gamma)) + (1-p)^gamma ) )
+
+
+wf %>% ggplot(aes(p, w, group = as.factor(gamma), color = as.factor(gamma))) +
+  facet_wrap(~delta, nrow=1) + 
+  geom_abline(slope=1, linetype='dashed', linewidth = 1, color = 'gray') +
+  geom_line(linewidth = 1) + 
+  theme_minimal()
+```
+
+It can be seen that in the case of $\gamma = \delta =  1$ (blue line, middle panel), all transformed probabilities $w(p)$ are equal to the objective probabilities $p$. 
+However, when $\gamma \neq 1$ and/or $\delta \neq 1$, the transformation gets curved, indicating a nonlinear transformation of probabilities. 
+The exact form of the transformation depends on the combination of $\gamma$ and $\delta$. 
+Generally, the function takes an inverse S-shape when  $\gamma < 1$ (red line), but an S-shape when $\gamma > 1$ (red line). 
+$\gamma$ is therefore often referred to as the curvature parameter. 
+When $\delta = 1$, the function intersects the diagonal at the probability midpoint $p=.5$. 
+The function is more elevated (runs above the diagonal most of the time) when $\delta > 1$, but less elevated (runs below the diagonal most of the time) when $\delta < 1$. 
+In CPT, the transformations of the probability weighting function are used to derive the decisions weights $\pi$. 
+When each option has at most two different outcomes that are all in the gain domain, the decisions weights are derived according to:  
+
+$$
+\begin{align}
+\pi_{high}^+ &= w(p_{high}) \\
+\pi_{low}^+ &= 1 - \pi_{high}^+ 
+\end{align}
+$$
+When each option has at most two different outcomes that are all in the loss domain, the decisions weights are derived according to:   
+
+$$
+\begin{align}
+\pi_{low}^- &= w(p_{low}) \\
+\pi_{high}^- &= 1 - \pi_{low}^+ 
+\end{align}
+$$
+The subjective values and decision weights that are obtained via these two transformations are then used to compute the subjective valuations of each option. 
+Similar to EV maximization, it is assumed that the option with the highest valuation is chosen. 
+
+```{r}
+cpt <- problems %>% 
+  mutate( # rank order attributes
+    hA = case_when(outcomeA1 > outcomeA2 ~ outcomeA1, 
+                   outcomeA1 < outcomeA2 ~ outcomeA2, 
+                   outcomeA1 == outcomeA2 ~ outcomeA1) , 
+    lA = case_when(outcomeA1 > outcomeA2 ~ outcomeA2, 
+                   outcomeA1 < outcomeA2 ~ outcomeA1,
+                   outcomeA1 == outcomeA2 ~ outcomeA2) ,
+    hB = case_when(outcomeB1 > outcomeB2 ~ outcomeB1, 
+                   outcomeB1 < outcomeB2 ~ outcomeB2, 
+                   outcomeB1 == outcomeB2 ~ outcomeB1) , 
+    lB = case_when(outcomeB1 > outcomeB2 ~ outcomeB2, 
+                   outcomeB1 < outcomeB2 ~ outcomeB1,
+                   outcomeB1 == outcomeB2 ~ outcomeB2) ,
+    p_hA = case_when(outcomeA1 > outcomeA2 ~ probA1,
+                     outcomeA1 < outcomeA2 ~ probA2, 
+                     outcomeA1 == outcomeA2 ~ probA1) , 
+    p_lA = case_when(outcomeA1 > outcomeA2 ~ probA2,
+                     outcomeA1 < outcomeA2 ~ probA1,
+                     outcomeA1 == outcomeA2 ~ probA2) ,
+    p_hB = case_when(outcomeB1 > outcomeB2 ~ probB1,
+                     outcomeB1 < outcomeB2 ~ probB2,
+                     outcomeB1 == outcomeB2 ~ probB1) , 
+    p_lB = case_when(outcomeB1 > outcomeB2 ~ probB2, 
+                     outcomeB1 < outcomeB2 ~ probB1,
+                     outcomeB1 == outcomeB2 ~ probB2)) %>%
+  select(!(probA1:outcomeB2)) %>% 
+  select(problem, label, domain, hA:p_lB, ev_A, ev_B, max_ev_det, ev_max_obs, everything()) 
+```
+
+
+
+```{r}
+#| echo: false
+
+cpt_problems <- cpt %>% select(problem:p_lB)
+cpt_choices <- cpt %>% select(`1_er171989`:`99_AA211989`)
+```
+
+```{r}
+lambda <- 1
+alpha <- 1
+gamma <- 1
+delta <- 1
+
+cpt_pred <- cpt %>%
+  
+  mutate(
+    
+    # transform attributes
+    
+    v_hA = if_else(hA >= 0, hA^alpha ,  -lambda*(abs(hA)^alpha)) , 
+    v_lA = if_else(lA >= 0, lA^alpha ,  -lambda*(abs(lA)^alpha)) , 
+    v_hB = if_else(hB >= 0, hB^alpha ,  -lambda*(abs(hB)^alpha)) ,
+    v_lB = if_else(lB >= 0, lB^alpha ,  -lambda*(abs(lB)^alpha)) , 
+    
+    
+    pi_hA = case_when(hA >= 0 ~ ( delta*(p_hA^gamma) ) / (  (delta*(p_hA^gamma)) + p_lA^gamma ) , 
+                      hA < 0 ~ 1 - ( delta*(p_lA^gamma) ) / (  (delta*(p_lA^gamma)) + p_hA^gamma ) ) ,
+    pi_lA = 1 - pi_hA , 
+    
+    pi_hB = case_when(hB >= 0 ~ ( delta*(p_hB^gamma) ) / (  (delta*(p_hB^gamma)) + p_lB^gamma ) , 
+                      hB < 0 ~ 1 - ( delta*(p_lB^gamma) ) / (  (delta*(p_lB^gamma)) + p_hB^gamma )
+    ) ,  
+    pi_lB = 1 - pi_hB ,
+    
+    # option valuation and choice
+    
+    cpt_A = pi_hA*v_hA + pi_lA*v_lA ,   
+    cpt_B = pi_hB*v_hB + pi_lB*v_lB ,
+    
+    cpt_det = case_when(cpt_A > cpt_B ~ 0 , 
+                        cpt_A < cpt_B ~ 1 , 
+                        cpt_A == cpt_B ~ NA )
+    ) 
+    
+test <- cpt_pred %>% 
+  mutate(cpt_max_obs = round ( case_when(cpt_det == 0 ~ rowMeans(select(., `1_er171989`:`99_AA211989`), na.rm = TRUE)  , 
+                                         cpt_det == 1 ~ 1-rowMeans(select(., `1_er171989`:`99_AA211989`), na.rm = TRUE) 
+                                        ) , 2
+                              )
+         ) %>%
+  select(problem, label, domain, ev_max_obs, cpt_max_obs) %>% 
+  mutate(equal = ev_max_obs==cpt_max_obs)
+
+mean(test$ev_max_obs, na.rm=T) 
+mean(test$cpt_max_obs, na.rm=T) 
+```
+
+## Fitting CPT
+
+In the above demonstration of CPT, we showed that applying the transformations implemented in CPT lead to an improved prediction over EV maximization. 
+While the behavior of the curves for different parameter values might constrain the plausible (combinations of) parameter values, we nonetheless set their values in a rather unsystematic way. 
+Hence, it is likely that another combination of parameters might yield a better prediction. 
+But how to find this combination of parameter values for our model? 
+In other words, how do we get from our initial beliefs about the plausibility of the parameter values, $p(\Theta) = p(\alpha, \lambda, \gamma, \delta)$ , before having seen the data to updated "beliefs" about the parameters values after having seen the data $p(\Theta|D)$? 
+
+$$
+p(\Theta) \to p(\Theta|D) \; \text{?}
+$$
+Here is the intuition behind the solution for this updating problem:
+
+1. Take a set of parameter values for the parameters in your model
+2. Calculate the probability of the data given these parameter values (likelihood) 
+3. Weigh (multiply) the likelihood with the initial plausibility of parameter values (prior)
+
+The product we obtain from Step 3 (i.e., the multiplication of prior and likelihood) gives us the updated probability of the respective parameter values given the data (posterior probability): 
+
+$$
+p(\Theta|D) \propto p(\Theta) p(D|\Theta)
+$$ 
+If we repeat these steps for all possible combinations of parameter values, we can simply take the parameter values that have the biggest posterior.
+Before demonstrating how we can compute these posteriors for our CPT model using `R` and a simulation program calls `JAGS`, we explain the different parts of 
+
+### Prior
+
+The prior probability, $p(\Theta)$ expresses our initial beliefs about the plausibility of different parameter values. 
+The main function of the prior is to indicate, which parameter values could be obtained in principle (the possible range of values), and how plausible the values on this range are relatively to each other.
+In other words, the prior is a probability distribution over parameter values. 
+<!--maybe we can get more detailed here, e.g., provide an example-->
+
+### Likelihood
+
+#### The Most Simple Choice Model
+
+The likelihood is the probability of the data given the model and a set of parameter values.
+
+To illustrate, a much simpler model than CPT for the risky choice problems from Kellen et al. (2016) would be a binomial model which predicts the choice of `Option 1` (1) vs. `Option 2` with a constant probability $\theta$.
+That is, when $\theta=1$, it always predicts choosing `Option 1`. 
+As a consequence, when someone chooses `Option 2`, the probability of this choice given our model would be $0$. 
+In contrast, if instead $\theta=.3$, the probability of someone choosing `Option 2` would be instead $.7$. 
+In other words, the observed choice of `Option B` is more likely when $\theta = .3$ than when $\theta=1$. 
+
+```{r}
+# theta=1
+theta <- 1
+B_choice <- 0 
+dbinom(B_choice,1,prob=theta)
+
+# theta = .3
+theta <- .3
+B_choice <- 0
+dbinom(B_choice,1,prob=theta)
+```
+
+We can now extend this example to more choices and more candidate values for $\theta$. 
+Note that the likelihood for multiple choices is simply the product of all choices' individual likelihoods, assuming that the choices are independent.
+In the following example, we take the candidate values `\theta=``r seq(0,1,.1)` and calculate the likelihood of the choices of all participants on Problem 1 from Kellen et al. (2016) data. 
+
+```{r}
+# get choices from problem 1
+choices_p1 <- as.numeric(as.vector(cpt_choices[1,]))
+choices_p1
+
+# calculate the likelihood
+theta <- seq(0,1,.1)
+lh <- round(dbinom(sum(choices_p1),length(choices_p1), prob=theta), 3)
+tibble(Theta=theta , 
+       Likelihood = lh, 
+       Likelihood_std = lh/sum(lh)) %>%
+  kable()
+```
+
+We can easily see that the observed choices on Problem 1 are much more likely when we assume a moderate to high probability of choosing `Option 1`.
+
+#### Likelihood for CPT
+
+Although CPT is a more complex model than the simple binomial from above, the idea is exactly the same. 
+We have a number of free (unknown) parameters that we want to learn about ($\theta$ for the binomial; $\alpha, \lambda,\gamma,\delta$ for CPT) and the probability of an observed choices depends on the values of these parameters.
+The main difference between the binomial and CPT is that the binomial simply assumes a constant probability for choosing `Option 1` vs. `Option 2` for all choice problems (that is $\theta$), whereas CPT uses (transformations of) the outcomes and their probabilities in a choice problem to compute a choice probability that is specific for this problem. 
+However, since CPT can only make deterministic predictions so far (e.g., always choose `Option A` when $V_A > V_B$), we need to make one more adjustment to CPT so that it can provide us with probabilities that can also be different from 0 and 1.
+
+In this adjustment, we use a choice rule, which predicts a higher probability for choosing `Option A`, the better its CPT score ($V_A$) is compared to the score for `Option B`. 
+That is, in contrast to the deterministic version, the prediction does not only depend on whether `Option A` obtains a better evaluation than `Option B`, but also on how much better this evaluation is. 
+If the evaluation is much better, it is highly likely that `Option A` is chosen, if it is much worse, it is instead highly likely that `Option B` is chosen. 
+If their evaluations are similar, the choice probability gets closer to $.5$.
+This logic is implemented in the so called logit choice rule, which takes the CPT valuations as input and returns a choice probability as output: 
+$$
+p(A) = \frac{1}{1+e^{-\phi(V_A-V_B)}} \: , 
+$$
+
+where $\phi$ is a number that can take values $\geq0$ (free parameter).
+The figure below illustrates how the logit choice rule translates differences in the CPT valuations (x-axis) into a choice probability that is constrained between 0 and 1 (y-axis).
+In general, when difference in valuations is 0, the choice probability is .5. 
+Intuitively, when the options do not really differ, we also have no preference for one option or the other. 
+Then, when the difference in valuations becomes positive, the probability for choosing `Option A` increases; and when they become negative, the probability for choosing `Option A` decreases.
+As can be seen, $\phi$ affects how strongly the probability depends on the differences. 
+
+```{r}
+logit <- expand_grid(Diff = c(seq(-4, 4, .01)) , 
+                     phi = c(0, .5, 1)) %>%
+  mutate(Prob = 1/(1+(exp(-phi*Diff)) ))
+
+
+logit %>% ggplot(aes(Diff, Prob, group = as.factor(phi), color = as.factor(phi))) +
+  geom_line(linewidth = 1) + 
+  theme_minimal()
+```
+
+## Using MCMC/JAGS to obtain the posterior
+
+```{r eval=FALSE}
+
+nGain <- cpt_problems %>% filter(domain=='Gain') %>% nrow()
+nLoss <- cpt_problems %>%  filter(domain=='Loss') %>% nrow()
+nTotal <- cpt_problems %>% nrow()
+nSubj <- ncol(cpt_choices)
+
+
+params_cpt <- c("alpha", "gamma", "delta", "rho") # free parameters
+#source("code/helper_functions/fun_initialize_MCMC.R") # calls function to create starting values for MCMC
+
+params_init <- function(){
+  list("alpha.pre" = rep(.5, nSubj) , # individual level parameters
+       "gamma.pre" = rep(.5, nSubj) ,
+       "delta.pre" = rep(.5, nSubj) , 
+       "rho.pre" = rep(.001, nSubj) 
+       ) 
+}
+
+
+data <- list(choice = as.matrix(cpt_choices) ,
+             hA = cpt_problems$hA ,
+             lA = cpt_problems$lA ,
+             hB = cpt_problems$hB ,
+             lB = cpt_problems$lB ,
+             p_hA = cpt_problems$p_hA ,
+             p_lA = cpt_problems$p_lA ,
+             p_hB = cpt_problems$p_hB ,
+             p_lB = cpt_problems$p_lB ,
+             nGain = nGain , 
+             nLoss = nLoss , 
+             nTotal = nTotal , 
+             nSubj = nSubj
+  )
+
+  ## sample from posterior distributions using MCMC
+m <- jags.parallel(data = data , 
+                   inits = params_init , 
+                   parameters.to.save = params_cpt ,
+                   model.file = "tutorials/BayesianCognitiveModeling/JAGS_cpt_model_independent.txt" # see below ,
+                   n.chains = 6,
+                   n.iter = 2000 ,
+                   n.burnin = 1000 ,
+                   n.cluster = 6 , # compute MCMC chains in parallel
+                   DIC = TRUE ,
+                   jags.seed = 1223)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+
+saveRDS(m, 'tutorials/BayesianCognitiveModeling/cpt_model.rds')
+```
+
+
+```
+# JAGS_cpt_model_independent.txt
+
+
+model {
+
+  for (j in 1:nSubj) {  #Subject-loop
+
+    #Value function 
+    alpha.pre[j] ~ dbeta(1,1)
+    gamma.pre[j] ~ dbeta(1,1)
+    delta.pre[j] ~ dbeta(1,1)
+    rho.pre[j] ~ dbeta(1,1) 
+    
+    alpha[j] <- (alpha.pre[j])
+    gamma[j] <- (gamma.pre[j]) * 2
+    delta[j] <- (delta.pre[j]) * 5
+    rho[j] <- (rho.pre[j]) * 5 
+  
+
+    #Gains
+    for (i in 1:nGain){  #Item loop
+
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- pow(hA[i],alpha[j])
+      v.lA[i,j] <- pow(lA[i],alpha[j])
+      
+      #Lottery B
+      v.hB[i,j] <- pow(hA[i],alpha[j])       
+      v.lB[i,j] <- pow(hB[i],alpha[j])
+      
+      #Probability weighting function 
+      #Lottery A
+      pi.hA[i,j] <- (delta[j] * (pow(p_hA[i], gamma[j]))) / (delta[j] * (pow(p_hA[i], gamma[j])) + pow(p_lA[i], gamma[j]))
+      pi.lA[i,j]<- 1 - pi.hA[i,j]
+      
+      #Lottery B
+      pi.hB[i,j] <- (delta[j] * (pow(p_hB[i], gamma[j]))) / (delta[j] * (pow(p_hB[i], gamma[j])) + pow(p_lB[i], gamma[j]))
+      pi.lB[i,j] <- 1 - pi.hB[i,j]
+      
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+      
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+    }
+    
+    
+    
+    # Losses
+    for (i in (nGain+1):(nGain+nLoss)) {
+    
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- (-1) * pow((-1*hA[i]),alpha[j])
+      v.lA[i,j] <- (-1) * pow((-1*lA[i]),alpha[j])
+  
+      #Lottery B
+      v.hB[i,j] <- (-1) * pow((-1*hB[i]),alpha[j])     
+      v.lB[i,j] <- (-1) * pow((-1*hB[i]),alpha[j])
+      
+      #Probability weighting function 
+      #Lottery A
+      pi.lA[i,j] <- (delta[j] * (pow(p_lA[i], gamma[j]))) / (delta[j] * (pow(p_lA[i], gamma[j])) + pow(p_hA[i], gamma[j]))
+      pi.hA[i,j] <- 1 - pi.lA[i,j]
+  
+      #Lottery B
+      pi.lB[i,j] <- (delta[j] * (pow(p_lB[i], gamma[j]))) / (delta[j] * (pow(p_lB[i], gamma[j])) + pow(p_hB[i], gamma[j]))
+      pi.hB[i,j] <- 1 - pi.lB[i,j]
+  
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+  
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+      }
+      
+      
+      # Mixed
+       
+      for (i in (nGain+nLoss+1):nTotal) {
+    
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- (-1) * pow(hA[i],alpha[j])
+      v.lA[i,j] <- (-1) * pow((-1*lA[i]),alpha[j])
+  
+      #Lottery B
+      v.hB[i,j] <- (-1) * pow(hB[i],alpha[j])   
+      v.lB[i,j] <- (-1) * pow((-1*lB[i]),alpha[j])
+  
+      #Probability weighting function 
+      #Lottery A
+      pi.hA[i,j] <- (delta[j] * (pow(p_hA[i], gamma[j]))) / (delta[j] * (pow(p_hA[i], gamma[j])) + pow(p_lA[i], gamma[j]))
+      pi.lA[i,j]<- 1 - pi.hA[i,j]
+      
+      #Lottery B
+      pi.hB[i,j] <- (delta[j] * (pow(p_hB[i], gamma[j]))) / (delta[j] * (pow(p_hB[i], gamma[j])) + pow(p_lB[i], gamma[j]))
+      pi.lB[i,j] <- 1 - pi.hB[i,j]
+  
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+  
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+      }
+      
+      
+      
+      
+  }
+}   
+
+```
+
+```{r}
+#| echo: false
+
+m <- readRDS(here('tutorials', 'BayesianCognitiveModeling', 'cpt_model.rds'))
+```
+
+
+```{r}
+m.summary <- m$BUGSoutput$summary %>% as_tibble(rownames = "parameter")
+kable(m.summary, digits = 4)
+```
+
+
+
