@@ -20,6 +20,8 @@ pacman::p_load(readxl ,
                knitr, 
                here
                )
+
+set.seed(1) # setting seed to make random samples reproducible
 ```
 
 ```{r include=FALSE}
@@ -29,8 +31,11 @@ here::i_am("tutorials/BayesianCognitiveModeling/bayesian_cognitive_modeling.Rmd"
 
 ## Risky Choice
 
+Sometimes in your life, you make choices between certain outcomes (e.g., what to eat from your fridge). In other situations, you have to make risky choices:
 When making decisions under risk, choosing an option does not always lead to the same outcome.
-Instead, choosing an option can lead to one of several outcomes with some probability. 
+Instead, choosing an option can lead to one of several outcomes with some probability. A classical example would be playing a lottery, another real life example would be deciding to buy insurance or not (where the future event of getting a disease is not for sure but may only happen with some predicted probability).
+
+In our studies, we often investigate people's choice behavior between lotteries ("risky prospects").
 Consider the following risky choice problem from a study of Kellen et al. (2016), involving two options, $A$ and $B$. 
 The different columns represent different features of both options.
 
@@ -91,9 +96,11 @@ sample(c(problems[[1,'outcomeB1']], problems[[1,'outcomeB2']]) ,
        prob=c(problems[[1,'probB1']], problems[[1,'probB2']]))
 ```
 
-Turning to `Option A` always return, we notice that `outcomeA1`=`r problems[[1,'outcomeA1']]` occurs with `probA1`=`r problems[[1,'probA1']]` and `outcomeA2`=`r problems[[1,'outcomeA2']]` occurs with `probA2`=`r problems[[1,'probA2']]`.
+Turning to `Option A`, we notice that `outcomeA1`=`r problems[[1,'outcomeA1']]` occurs with `probA1`=`r problems[[1,'probA1']]` and `outcomeA2`=`r problems[[1,'outcomeA2']]` occurs with `probA2`=`r problems[[1,'probA2']]`.
 Thus, this option is effectively a safe option, where `outcomeA2` does not really exist and we instead always obtain a `3`.
 To illustrate, we also simulate choosing `Option A` 100 times. 
+
+Note that we still need to keep the (in reality non-existent) outcome A2 in our dataframe for modeling purposes. We will get to that later.
 
 ```{r}
 sample(c(problems[[1,'outcomeA1']], problems[[1,'outcomeA2']]) , 
