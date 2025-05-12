@@ -1,0 +1,130 @@
+#Cumulative prospect theory hierarchical implementation
+
+# This model implements Cumulative prospect theory in the following functional forms:
+# Value function: 	Tversky & Kahnemann (1992) -> Two-parametric version estimating alpha and lambda parameters.
+# Weighting function: 	Tversky & Kahnemann (1992) -> One-parametric version, estimating a global estimate across gain and loss domains.
+# Choice rule: 		Logit Choice rule
+# For a comparison to other functional forms, see Stott (2006)
+
+
+model {
+
+  for (j in 1:nSubj) {  #Subject-loop
+
+    #Value function 
+    alpha.pre[j] ~ dbeta(1,1)
+    gamma.pre[j] ~ dbeta(1,1)
+    delta.pre[j] ~ dbeta(1,1)
+    rho.pre[j] ~ dbeta(1,1) 
+    
+    alpha[j] <- (alpha.pre[j])
+    gamma[j] <- (gamma.pre[j]) * 2
+    delta[j] <- (delta.pre[j]) * 5
+    rho[j] <- (rho.pre[j]) * 5 
+  
+
+    #Gains
+    for (i in 1:nGain){  #Item loop
+
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- pow(hA[i],alpha[j])
+      v.lA[i,j] <- pow(lA[i],alpha[j])
+      
+      #Lottery B
+      v.hB[i,j] <- pow(hA[i],alpha[j])       
+      v.lB[i,j] <- pow(hB[i],alpha[j])
+      
+      #Probability weighting function 
+      #Lottery A
+      pi.hA[i,j] <- (delta[j] * (pow(p_hA[i], gamma[j]))) / (delta[j] * (pow(p_hA[i], gamma[j])) + pow(p_lA[i], gamma[j]))
+      pi.lA[i,j]<- 1 - pi.hA[i,j]
+      
+      #Lottery B
+      pi.hB[i,j] <- (delta[j] * (pow(p_hB[i], gamma[j]))) / (delta[j] * (pow(p_hB[i], gamma[j])) + pow(p_lB[i], gamma[j]))
+      pi.lB[i,j] <- 1 - pi.hB[i,j]
+      
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+      
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+    }
+    
+    
+    
+    # Losses
+    for (i in (nGain+1):(nGain+nLoss)) {
+    
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- (-1) * pow((-1*hA[i]),alpha[j])
+      v.lA[i,j] <- (-1) * pow((-1*lA[i]),alpha[j])
+  
+      #Lottery B
+      v.hB[i,j] <- (-1) * pow((-1*hB[i]),alpha[j])     
+      v.lB[i,j] <- (-1) * pow((-1*hB[i]),alpha[j])
+      
+      #Probability weighting function 
+      #Lottery A
+      pi.lA[i,j] <- (delta[j] * (pow(p_lA[i], gamma[j]))) / (delta[j] * (pow(p_lA[i], gamma[j])) + pow(p_hA[i], gamma[j]))
+      pi.hA[i,j] <- 1 - pi.lA[i,j]
+  
+      #Lottery B
+      pi.lB[i,j] <- (delta[j] * (pow(p_lB[i], gamma[j]))) / (delta[j] * (pow(p_lB[i], gamma[j])) + pow(p_hB[i], gamma[j]))
+      pi.hB[i,j] <- 1 - pi.lB[i,j]
+  
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+  
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+      }
+      
+      
+      # Mixed
+       
+      for (i in (nGain+nLoss+1):nTotal) {
+    
+    
+      #Value function
+      #Lottery A
+      v.hA[i,j] <- (-1) * pow(hA[i],alpha[j])
+      v.lA[i,j] <- (-1) * pow((-1*lA[i]),alpha[j])
+  
+      #Lottery B
+      v.hB[i,j] <- (-1) * pow(hB[i],alpha[j])   
+      v.lB[i,j] <- (-1) * pow((-1*lB[i]),alpha[j])
+  
+      #Probability weighting function 
+      #Lottery A
+      pi.hA[i,j] <- (delta[j] * (pow(p_hA[i], gamma[j]))) / (delta[j] * (pow(p_hA[i], gamma[j])) + pow(p_lA[i], gamma[j]))
+      pi.lA[i,j]<- 1 - pi.hA[i,j]
+      
+      #Lottery B
+      pi.hB[i,j] <- (delta[j] * (pow(p_hB[i], gamma[j]))) / (delta[j] * (pow(p_hB[i], gamma[j])) + pow(p_lB[i], gamma[j]))
+      pi.lB[i,j] <- 1 - pi.hB[i,j]
+  
+      #Valuation 
+      Vf.A[i,j]  <- pi.hA[i,j] * v.hA[i,j] + pi.lA[i,j] * v.lA[i,j]
+      Vf.B[i,j]  <- pi.hB[i,j] * v.hB[i,j] + pi.lB[i,j] * v.lB[i,j]
+  
+      #Choice rule
+      binval[i,j] <- (1)/(1+exp(-1*(rho[j]*(Vf.A[i,j]-Vf.B[i,j]))))
+      choice[i,j] ~ dbern(binval[i,j])
+      
+      }
+      
+      
+      
+      
+  }
+}   
