@@ -1,12 +1,10 @@
 ---
-title: "Bayesian Cognitive Modeling"
-subtitle: "Tutorial"
+title: "Bayesian Cognitive Modeling Tutorial"
 author: "Linus Hof & Nuno Busch"
-date: "`r Sys.time()`"
-output:
-  html_document:
-    keep_md: true
+output: github_document
 ---
+
+Last updated: `r Sys.Date()`
 
 ```{r include=FALSE}
 # packages 
@@ -36,7 +34,7 @@ In our studies, we often investigate people's choice behavior in a controlled co
 Consider the following risky choice problem from a study of [Kellen et al. (2016)](https://linkinghub.elsevier.com/retrieve/pii/S0010027716302104), involving two options, $A$ and $B$. 
 The different columns represent different features of both options.
 
-```{r}
+```{r message=FALSE}
 #| echo: false
 #| output: false
 
@@ -153,7 +151,7 @@ In their study, Kellen et al. (2016) collected the choices of `r ncol(descriptio
 To illustrate, the following table shows the choices of 10 participants (columns) on the first 10 choice problems (rows). Here, again, values of 1 refer to a choice of `Option A`, and values of 0 mean that `Option B` was chosen. 
 
 
-```{r}
+```{r message=FALSE}
 #| echo: false
 #| output: false
 
