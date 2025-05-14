@@ -2,17 +2,11 @@
 title: "Bayesian Cognitive Modeling"
 subtitle: "Tutorial"
 author: "Linus Hof & Nuno Busch"
-date: "2025-05-09 11:59:40.270348"
-format: 
-  html:
-    keep-md: true
-editor_options: 
-  markdown: 
-    wrap: sentence
-  chunk_output_type: console
+date: "2025-05-14 19:30:56.604102"
+output:
+  html_document:
+    keep_md: true
 ---
-
-
 
 
 
@@ -30,15 +24,21 @@ Consider the following risky choice problem from a study of [Kellen et al. (2016
 The different columns represent different features of both options.
 
 
-::: {.cell}
+```
+## New names:
+## New names:
+## • `` -> `...7`
+## • `` -> `...8`
+## • `` -> `...13`
+## • `` -> `...14`
+```
 
-:::
 
-::: {.cell}
 
-```{.r .cell-code}
+
+```r
 # read data
-problems <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet=1) # problem features
+problems <- read_xlsx("BayesianCognitiveModeling/kellen2016.xlsx", sheet=1) # problem features
 
 # clean data
 problems %<>% 
@@ -49,21 +49,18 @@ problems %<>%
   select( problem, label, domain, everything()) %>% 
   arrange(domain)
 ```
-:::
 
-::: {.cell}
 
-```{.r .cell-code}
+
+```r
 kable(problems[1,])
 ```
 
-::: {.cell-output-display}
+
+
 | problem|label    |domain | probA1| outcomeA1| probA2| outcomeA2| probB1| outcomeB1| probB2| outcomeB2|
 |-------:|:--------|:------|------:|---------:|------:|---------:|------:|---------:|------:|---------:|
 |       1|hertwig1 |Gain   |      1|         3|      0|         0|    0.8|         4|    0.2|         0|
-:::
-:::
-
 
 For instance, `Option B` has two possible outcomes, indicated by `outcomeB1` and `outcomeB2`. 
 When choosing this option, one of the outcomes is obtained.
@@ -72,24 +69,18 @@ When choosing this option repeatedly, we therefore expect to obtain `4` most of 
 To illustrate, we simulate choosing `Option B` 100 times. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 sample(c(problems[[1,'outcomeB1']], problems[[1,'outcomeB2']]) , 
        size=100 ,
        replace = TRUE ,
        prob=c(problems[[1,'probB1']], problems[[1,'probB2']]))
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-  [1] 4 4 4 0 4 0 0 4 4 4 4 4 4 4 4 4 4 0 4 4 0 4 4 4 4 4 4 4 0 4 4 4 4 4 0 4 4
- [38] 4 4 4 0 4 4 4 4 4 4 4 4 4 4 0 4 4 4 4 4 4 4 4 0 4 4 4 4 4 4 4 4 0 4 0 4 4
- [75] 4 0 0 4 4 0 4 4 4 4 4 4 4 4 4 4 4 4 4 0 4 4 4 4 0 4
+##   [1] 4 4 4 0 4 0 0 4 4 4 4 4 4 4 4 4 4 0 4 4 0 4 4 4 4 4 4 4 0 4 4 4 4 4 0 4 4
+##  [38] 4 4 4 0 4 4 4 4 4 4 4 4 4 4 0 4 4 4 4 4 4 4 4 0 4 4 4 4 4 4 4 4 0 4 0 4 4
+##  [75] 4 0 0 4 4 0 4 4 4 4 4 4 4 4 4 4 4 4 4 0 4 4 4 4 0 4
 ```
-:::
-:::
-
 
 Turning to `Option A`, we notice that `outcomeA1`=3 occurs with `probA1`=1 and `outcomeA2`=0 occurs with `probA2`=0.
 Thus, this option is effectively a safe option, where `outcomeA2` does not really exist and we instead always obtain a `3`. 
@@ -100,24 +91,18 @@ To illustrate, we also simulate choosing `Option A` 100 times.
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 sample(c(problems[[1,'outcomeA1']], problems[[1,'outcomeA2']]) , 
        size=100 ,
        replace = TRUE ,
        prob=c(problems[[1,'probA1']], problems[[1,'probA2']]))
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-  [1] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
- [38] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
- [75] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+##   [1] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+##  [38] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
+##  [75] 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
 ```
-:::
-:::
-
 
 In a typical risky choice study, people are presented with the possible outcomes and probabilities of both options and need to decide which of the options they prefer (so-called *decisions from description*). 
 However, most studies involve more than just one choice problem. 
@@ -127,13 +112,12 @@ Each problem is a unique combination of the outcomes and probabilities for `Opti
 The column `domain` indicates whether all possible outcomes are $\geq 0$ (`Gain`), or whether all outcome are $\leq 0$ (`Loss`), or whether the problem involves some outcomes that are $>0$ and some that are a $<0$ - i.e., a problem featuring a gamble that could lead to either a gain, or a loss. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 kable(problems)
 ```
 
-::: {.cell-output-display}
+
+
 | problem|label      |domain | probA1| outcomeA1| probA2| outcomeA2| probB1| outcomeB1| probB2| outcomeB2|
 |-------:|:----------|:------|------:|---------:|------:|---------:|------:|---------:|------:|---------:|
 |       1|hertwig1   |Gain   |  1.000|       3.0|  0.000|         0|  0.800|       4.0|  0.200|         0|
@@ -250,9 +234,6 @@ kable(problems)
 |     109|DKErev3    |Mixed  |  1.000|       0.0|  0.000|         0|  0.500|     200.0|  0.500|      -200|
 |     111|DKErev5    |Mixed  |  1.000|      40.0|  0.000|         0|  0.500|     140.0|  0.500|       -60|
 |     113|DKErev7    |Mixed  |  0.500|      20.0|  0.500|       -20|  0.500|     100.0|  0.500|      -100|
-:::
-:::
-
 
 
 ## Expected Value Maximization
@@ -272,9 +253,7 @@ Below we showcase the choice predicted by EV maximization for the first five gam
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 problems %<>%  
   mutate(ev_A = round( probA1*outcomeA1 + probA2*outcomeA2 , 2) , # computes EV of option A and rounds the result to 2 decimal places
          ev_B = round( probB1*outcomeB1 + probB2*outcomeB2 , 2) , # computes EV of option B and rounds the result to 2 decimal places
@@ -286,7 +265,8 @@ problems %<>%
 kable(head(problems))
 ```
 
-::: {.cell-output-display}
+
+
 | problem|label     |domain | probA1| outcomeA1| probA2| outcomeA2| probB1| outcomeB1| probB2| outcomeB2| ev_A| ev_B| max_ev_det|
 |-------:|:---------|:------|------:|---------:|------:|---------:|------:|---------:|------:|---------:|----:|----:|----------:|
 |       1|hertwig1  |Gain   |   1.00|       3.0|   0.00|         0|  0.800|         4|  0.200|         0| 3.00| 3.20|          0|
@@ -295,9 +275,6 @@ kable(head(problems))
 |       7|hertwig7  |Gain   |   0.25|       3.0|   0.75|         0|  0.025|        32|  0.975|         0| 0.75| 0.80|          0|
 |       9|hertwig9  |Gain   |   0.75|       0.5|   0.25|         0|  0.150|         6|  0.850|         0| 0.38| 0.90|          0|
 |      11|hertwig11 |Gain   |   0.70|       0.9|   0.30|         0|  0.150|        13|  0.850|         0| 0.63| 1.95|          0|
-:::
-:::
-
 
 One of the shortcomings of the idea of EV maximization is that people do not seem to maximize expected values in real life.  
 In their study, Kellen et al. (2016) collected the choices of 104 participants on all of the 114 choice problems from above.
@@ -305,26 +282,25 @@ To illustrate, the following table shows the choices of 10 participants (columns
 
 
 
-::: {.cell}
+```
+## New names:
+## • `` -> `...1`
+```
 
-:::
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # read and clean data
-description <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet = 3, col_names = TRUE)
+description <- read_xlsx("BayesianCognitiveModeling/kellen2016.xlsx", sheet = 3, col_names = TRUE)
 description  %<>% rename(label = ...1)
 ```
-:::
 
-::: {.cell}
 
-```{.r .cell-code}
+```r
 kable(description[1:10, 1:11])
 ```
 
-::: {.cell-output-display}
+
+
 |label     | 1_er171989| 10_ad011989| 100_AL051986| 101_HS121988| 102_SS261994| 103_AE041989| 104_EZ261993| 105_NK311984| 106_SG181986| 107_PM041990|
 |:---------|----------:|-----------:|------------:|------------:|------------:|------------:|------------:|------------:|------------:|------------:|
 |hertwig1  |          1|           1|            1|            1|            1|            1|            1|            1|            1|            1|
@@ -337,9 +313,6 @@ kable(description[1:10, 1:11])
 |hertwig8  |          0|           1|            0|            0|            0|            1|            0|            1|            1|            0|
 |hertwig9  |          0|           0|            0|            0|            0|            0|            1|            0|            0|            1|
 |hertwig10 |          1|           0|            0|            0|            0|            0|            0|            1|            1|            0|
-:::
-:::
-
 
 Since we know for all problems whether `Option A` (`1`) or `Option B` (`0`) has the higher EV, we can compute the proportion of choices, in which participants chose the option with the higher EV. 
 
@@ -348,9 +321,7 @@ It is easy to see that people often deviate from strict EV maximization, sometim
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 problems <- problems %>%   
   left_join(description, by = join_by(label)) %>% # here, we merge our choice data with the dataframe containing the problem descriptions and the calculated EV and choice predictions.
   mutate(ev_max_obs = round ( case_when(max_ev_det == 1 ~ rowMeans(select(., `1_er171989`:`99_AA211989`), na.rm = TRUE)  , # this command computes the proportion of participants that maximized EV in a particular choice problem.
@@ -364,7 +335,8 @@ problems %>%
   kable()
 ```
 
-::: {.cell-output-display}
+
+
 | problem|label      |domain | probA1| outcomeA1| probA2| outcomeA2| probB1| outcomeB1| probB2| outcomeB2|    ev_A|    ev_B| max_ev_det| ev_max_obs|
 |-------:|:----------|:------|------:|---------:|------:|---------:|------:|---------:|------:|---------:|-------:|-------:|----------:|----------:|
 |       1|hertwig1   |Gain   |  1.000|       3.0|  0.000|         0|  0.800|       4.0|  0.200|         0|    3.00|    3.20|          0|       0.25|
@@ -481,9 +453,6 @@ problems %>%
 |     109|DKErev3    |Mixed  |  1.000|       0.0|  0.000|         0|  0.500|     200.0|  0.500|      -200|    0.00|    0.00|         NA|         NA|
 |     111|DKErev5    |Mixed  |  1.000|      40.0|  0.000|         0|  0.500|     140.0|  0.500|       -60|   40.00|   40.00|         NA|         NA|
 |     113|DKErev7    |Mixed  |  0.500|      20.0|  0.500|       -20|  0.500|     100.0|  0.500|      -100|    0.00|    0.00|         NA|         NA|
-:::
-:::
-
 
 
 
@@ -527,9 +496,7 @@ $\alpha$ controls the curvature of the value function (the diminishing marginal 
 The figure below illustrates the form of this value transformation when $\lambda = 1.2$, for different values of alpha: $\alpha = 1$, $\alpha = .9$, $\alpha = .8$.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 vf <- expand_grid(outcome = c(seq(-10, 10, .1)) , 
                   alpha = seq(from = .8, to = 1, by = .1)) %>% 
   mutate(v = case_when(outcome >= 0 ~ outcome^alpha , 
@@ -545,11 +512,7 @@ vf %>% ggplot(aes(outcome, v, group = as.factor(alpha), color=as.factor(alpha)))
   theme_minimal()
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-14-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/value-function-demo-1.png)<!-- -->
 
 It can be seen that in the case of $\alpha = 1$ (blue line), all subjective values $v(x)$ are equal the objective outcomes $x$ (except for $x_i < 0$: because of $\lambda > 1$. 
 The smaller $\alpha$ gets, the more curved (concave) is the line, indicating that the same change in objective outcomes (on the x-axis) leads to a smaller change in the subjective values (on the y-axis), the more extreme (more positive/negative) the objective outcomes get.
@@ -567,9 +530,7 @@ where $\gamma$ is a number that usually takes values between $0$ and $2$ and $\d
 The figure below illustrates the form of this transformation when $\gamma = .5$, $\gamma = .1$ or $\gamma = 1.5$ (line colors), and when $\delta = .4$, $\delta = 1.2$ or $\delta=2$ (different plot facets).
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 wf <- expand_grid(p = c(seq(0, 1, .01)) , 
                   gamma = c(.5, 1, 1.5) , 
                   delta = c(.4, 1, 2)) %>%
@@ -583,11 +544,7 @@ wf %>% ggplot(aes(p, w, group = as.factor(gamma), color = as.factor(gamma))) +
   theme_minimal()
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-15-1.png){width=960}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/weighting-function-demo-1.png)<!-- -->
 
 It can be seen that in the case of $\gamma = \delta =  1$ (green line, middle panel), all decision weights $w(p)$ are equal to the objective probabilities $p$. 
 However, when $\gamma \neq 1$ and/or $\delta \neq 1$, the function gets curved, indicating a nonlinear transformation of probabilities.  
@@ -621,9 +578,7 @@ Similar to EV maximization, it is assumed that the option with the highest valua
 Here, we first rank-order the outcomes and their probabilities according to the magnitude of the outcomes.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 cpt <- problems %>% 
   mutate( # rank order attributes
     hA = case_when(outcomeA1 > outcomeA2 ~ outcomeA1, 
@@ -653,19 +608,15 @@ cpt <- problems %>%
   select(!(probA1:outcomeB2)) %>% 
   select(problem, label, domain, hA:p_lB, ev_A, ev_B, max_ev_det, ev_max_obs, everything()) 
 ```
-:::
 
-::: {.cell}
 
-:::
+
 
 
 We then determine what choice CPT predicts for each choice problem given a set of parameter values that we can set. Here, we first illustrate a case where all CPT parameters equal 1. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 lambda <- 1
 alpha <- 1
 gamma <- 1
@@ -719,23 +670,17 @@ test <- cpt_pred %>%
 mean(test$ev_max_obs, na.rm=T) 
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0.6892381
+## [1] 0.6892381
 ```
-:::
 
-```{.r .cell-code}
+```r
 mean(test$cpt_max_obs, na.rm=T) 
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0.6892381
+## [1] 0.6892381
 ```
-:::
-:::
-
 
 As you see, the proportion of choices aligning with CPT does not differ from the proportion aligning with EV maximization. When all parameters equal 1, outcome values and probabilities are not distorted and CPT makes the same predictions as EV maximization.
 
@@ -743,9 +688,7 @@ If, however, we choose different parameters that will yield curved value and wei
 Here, we show this based on an empirically plausible set of parameter values (given previous research) and calculate the proportion of people for each choice problem in the empirical data from Kellen et al. whose choice aligned with CPT's predictions:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 lambda <- 1.2
 alpha <- 0.8
 gamma <- 0.6
@@ -800,23 +743,17 @@ test <- cpt_pred %>%
 mean(test$ev_max_obs, na.rm=T) 
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0.6892381
+## [1] 0.6892381
 ```
-:::
 
-```{.r .cell-code}
+```r
 mean(test$cpt_max_obs, na.rm=T) 
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0.7261404
+## [1] 0.7261404
 ```
-:::
-:::
-
 
 Comparing the mean of choices that align with EV maximization vs. CPT, we see that CPT better predicts our empirical choices given the chosen set of parameter values. This is a nice improvement, although small. The obvious question is: could this prediction accuracy be improved even further if we chose other parameter values? How can we find out which parameter values fit best?
 
@@ -868,58 +805,46 @@ In other words, the observed choice of `Option B` is more likely when $\theta = 
 Such a model of course disregards any attributes (outcome values and probabilities) of a given choice problem.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # theta=1
 theta <- 1
 B_choice <- 0 
 dbinom(B_choice,1,prob=theta)
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0
+## [1] 0
 ```
-:::
 
-```{.r .cell-code}
+```r
 # theta = .3
 theta <- .3
 B_choice <- 0
 dbinom(B_choice,1,prob=theta)
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] 0.7
+## [1] 0.7
 ```
-:::
-:::
-
 
 We can now extend this example to more choices and more candidate values for $\theta$. 
 Note that the likelihood for multiple choices is simply the product of all choices' individual likelihoods, assuming that the choices are independent.
 In the following example, we take the candidate values `\theta=`0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 and calculate the likelihood of the choices of all participants on Problem 1 from Kellen et al. (2016) data given these parameter values. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # get choices from problem 1
 choices_p1 <- as.numeric(as.vector(cpt_choices[1,]))
 choices_p1
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-  [1] 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 0 1 0 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1
- [38] 1 1 1 0 1 0 1 1 1 1 1 1 1 1 1 1 0 0 1 1 0 1 1 0 1 1 1 1 1 0 1 1 1 1 1 0 1
- [75] 0 1 1 1 0 1 0 0 0 1 1 0 1 1 0 1 1 1 0 0 0 1 1 1 1 1 0 1 1 1
+##   [1] 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 0 1 0 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1
+##  [38] 1 1 1 0 1 0 1 1 1 1 1 1 1 1 1 1 0 0 1 1 0 1 1 0 1 1 1 1 1 0 1 1 1 1 1 0 1
+##  [75] 0 1 1 1 0 1 0 0 0 1 1 0 1 1 0 1 1 1 0 0 0 1 1 1 1 1 0 1 1 1
 ```
-:::
 
-```{.r .cell-code}
+```r
 # calculate the likelihood
 theta <- seq(0,1,.1)
 lh <- round(dbinom(sum(choices_p1),length(choices_p1), prob=theta), 3)
@@ -929,7 +854,8 @@ tibble(Theta=theta ,
   kable()
 ```
 
-::: {.cell-output-display}
+
+
 | Theta| Likelihood| Likelihood_std|
 |-----:|----------:|--------------:|
 |   0.0|      0.000|      0.0000000|
@@ -943,9 +869,6 @@ tibble(Theta=theta ,
 |   0.8|      0.042|      0.4666667|
 |   0.9|      0.000|      0.0000000|
 |   1.0|      0.000|      0.0000000|
-:::
-:::
-
 
 We can easily see that the observed choices on Problem 1 are much more likely given the data when we assume a moderate to high probability of choosing `Option 1` (parameter values between 0.7 and 0.8) when we rely on this simple binomial decision model.
 
@@ -975,9 +898,7 @@ Then, when the difference in valuations becomes positive, the probability for ch
 As can be seen, $\phi$ affects how strongly the choice probability is influenced by the difference magnitude between the option's valuations. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 logit <- expand_grid(Diff = c(seq(-4, 4, .01)) , 
                      phi = c(0, .5, 1)) %>%
   mutate(Prob = 1/(1+(exp(-phi*Diff)) ))
@@ -988,11 +909,7 @@ logit %>% ggplot(aes(Diff, Prob, group = as.factor(phi), color = as.factor(phi))
   theme_minimal()
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-22-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/logit-demo-1.png)<!-- -->
 
 ### Using MCMC/JAGS to obtain the posterior
 
@@ -1019,14 +936,10 @@ Then, open RStudio and install R2jags (if not installed yet, outcommented below)
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # install.packages("R2jags", dependencies = TRUE)
 library(R2jags)
 ```
-:::
-
 
 
 Now we can go on to prepare the data for the model fitting. Generally, a JAGS model is written in a way that it expects us to hand over the data in a certain format, to be able to fit the model to the data. A JAGS model is specified in a text file and includes all the mathematical CPT formulae we discussed before in a code format.  
@@ -1182,17 +1095,13 @@ This executes the respective domain-specific model code for every problem in a g
 To be able to do so, we have to count the number of problems for each domain in the data, such that we can tell the model how long it should iterate each loop:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 nGain <- cpt_problems %>% filter(domain=='Gain') %>% nrow()
 nLoss <- cpt_problems %>%  filter(domain=='Loss') %>% nrow()
 nMixed <- cpt_problems %>%  filter(domain=='Mixed') %>% nrow()
 nTotal <- cpt_problems %>% nrow()
 nSubj <- ncol(cpt_choices)
 ```
-:::
-
 
 The domain-specific model code for each problem ends with the following part: 
 
@@ -1235,9 +1144,7 @@ Now that you have an overview of how the model is structured, let's prepare the 
 As you saw above, the JAGS model expects two-dimensional (choices) and one-dimensional (problem attributes) data formats for our variables. We now create a list called `data`that includes several entries with all our data in this exact expected format.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 data <- list(choice = as.matrix(cpt_choices) ,
              hA = cpt_problems$hA ,
              lA = cpt_problems$lA ,
@@ -1253,15 +1160,11 @@ data <- list(choice = as.matrix(cpt_choices) ,
              nSubj = nSubj
   )
 ```
-:::
-
 
 Lastly, we can specify some initial values to facilitate sampling - these are the values that JAGS starts with in each chain. In this model, we estimate individual parameters for every participant, so we have to provide as many starting values as we have participants.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 #source("helper_functions/fun_initialize_MCMC.R") # calls function to create starting values for MCMC
 params_init <- function(){
   list("alpha.pre" = rep(.5, nSubj) , # individual level parameters
@@ -1272,19 +1175,13 @@ params_init <- function(){
        ) 
 }
 ```
-:::
-
 
 Almost good to go. All that's left now is to tell JAGS which parameters we're interested in (i.e., which parameters JAGS should record and provide us a summary with. The more parameters you mention here, the bigger the resulting object will be):
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 params_cpt <- c("alpha", "lambda", "gamma", "delta", "rho") # free parameters
 ```
-:::
-
 
 
 Now we'll start fitting the model. The function `jags.parallel` enables the use of several Computer cores at once, making it possible to save time by sampling several chains in paralell. The number of cores used is specified in the argument `n.cluster`, the number of chains is specified in `n.chains`. Here, each chain has 2000 iterations, but JAGS only starts recording samples after a `n.burnin` period of 1000 samples. This is because it takes a while until the chain has "found" a range of values that actually make sense, roughly speaking. `n.thin` is the so-called thinning parameter that controls how many samples are recorded from the chain. In this case, we set it to 2, meaning that only every second sample is recorded after a `n.burnin` phase of 1000 iterations. This is done to reduce so-called *autocorrelation* of the samples from the chains.
@@ -1292,12 +1189,10 @@ Now we'll start fitting the model. The function `jags.parallel` enables the use 
 Since it can take a while to fit the model, here you can also load the RDS file with the samples from when we fitted the model.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # if RDS file exists, load existing fits 
-if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds"))){
-  samples <- readRDS(file = here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) 
+if(file.exists(here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds"))){
+  samples <- readRDS(here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) 
   print(paste("model loaded"))
   
 # if RDS file doesn't exist, rerun fits:
@@ -1307,7 +1202,7 @@ if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_
 samples <- jags.parallel(data = data , # empirical data
                    inits = params_init , # initial values for parameters in each chain
                    parameters.to.save = params_cpt , # parameters we want to record
-                   model.file = here("tutorials", "BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_individual.txt"), # model file
+                   model.file = here("BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_individual.txt"), # model file
                    n.chains = 6, # number of chains 
                    n.iter = 2000 , # number of iterations per chain
                    n.burnin = 1000 , # burn-in period
@@ -1316,110 +1211,91 @@ samples <- jags.parallel(data = data , # empirical data
                    DIC = TRUE , 
                    jags.seed = 1223) # seed to enable reproducibility
 
-saveRDS(samples, here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
+saveRDS(samples, here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
 print(paste("done fitting model to data"))
 }
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] "model loaded"
+## [1] "model loaded"
 ```
-:::
-:::
-
 
 
 Let's inspect the `samples` object. All single samples are recorded in the `sims.list`of the `BUGSoutput` element of the `samples` object. For example, all ((2000 iterations - 1000 burnin samples) * 6 chains = 6000) samples for each of the (104) individual $\alpha$ parameters are saved here:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 str(samples[["BUGSoutput"]][["sims.list"]][["alpha"]])
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
- num [1:3000, 1:104] 0.264 0.427 0.135 0.201 0.25 ...
+##  num [1:3000, 1:104] 0.264 0.427 0.135 0.201 0.25 ...
 ```
-:::
-:::
-
 
 The mean or median for each parameter (a point estimate for each participant's parameter) is also saved explicitly:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 samples[["BUGSoutput"]][["median"]][["alpha"]]
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-  [1] 0.23108015 0.37054672 0.12129217 0.04789496 0.44402894 0.23043030
-  [7] 0.35168175 0.22626343 0.42917920 0.30764377 0.26871200 0.38807825
- [13] 0.41601152 0.43794670 0.27092832 0.31843494 0.26843792 0.19585770
- [19] 0.13215414 0.13989735 0.19653474 0.28821807 0.36483390 0.20893852
- [25] 0.15710261 0.13958975 0.14512138 0.15648623 0.33907643 0.17972616
- [31] 0.20638806 0.22643949 0.15708061 0.19799509 0.21841344 0.39673066
- [37] 0.16694997 0.24005673 0.05295530 0.14523070 0.46844012 0.25881324
- [43] 0.25700351 0.23460369 0.41875199 0.12979010 0.47048501 0.35637998
- [49] 0.24005816 0.30911363 0.23579525 0.42277568 0.20297219 0.26802272
- [55] 0.28358652 0.40131102 0.19556865 0.54299889 0.53206218 0.25492919
- [61] 0.10276601 0.22619566 0.56644787 0.04794844 0.35365816 0.18885263
- [67] 0.39535778 0.18253921 0.16604806 0.29737011 0.18470893 0.18726182
- [73] 0.15165164 0.03356222 0.35721838 0.40402657 0.21525813 0.16845640
- [79] 0.05694658 0.15615072 0.13902593 0.16449531 0.08739753 0.17690157
- [85] 0.25115337 0.19566115 0.14157825 0.30340759 0.24987091 0.13789143
- [91] 0.26844831 0.25168133 0.24085048 0.56755380 0.30091691 0.27461892
- [97] 0.23053625 0.12959360 0.19212221 0.08477143 0.30387513 0.20571197
-[103] 0.22449902 0.14555498
+##   [1] 0.23108015 0.37054672 0.12129217 0.04789496 0.44402894 0.23043030
+##   [7] 0.35168175 0.22626343 0.42917920 0.30764377 0.26871200 0.38807825
+##  [13] 0.41601152 0.43794670 0.27092832 0.31843494 0.26843792 0.19585770
+##  [19] 0.13215414 0.13989735 0.19653474 0.28821807 0.36483390 0.20893852
+##  [25] 0.15710261 0.13958975 0.14512138 0.15648623 0.33907643 0.17972616
+##  [31] 0.20638806 0.22643949 0.15708061 0.19799509 0.21841344 0.39673066
+##  [37] 0.16694997 0.24005673 0.05295530 0.14523070 0.46844012 0.25881324
+##  [43] 0.25700351 0.23460369 0.41875199 0.12979010 0.47048501 0.35637998
+##  [49] 0.24005816 0.30911363 0.23579525 0.42277568 0.20297219 0.26802272
+##  [55] 0.28358652 0.40131102 0.19556865 0.54299889 0.53206218 0.25492919
+##  [61] 0.10276601 0.22619566 0.56644787 0.04794844 0.35365816 0.18885263
+##  [67] 0.39535778 0.18253921 0.16604806 0.29737011 0.18470893 0.18726182
+##  [73] 0.15165164 0.03356222 0.35721838 0.40402657 0.21525813 0.16845640
+##  [79] 0.05694658 0.15615072 0.13902593 0.16449531 0.08739753 0.17690157
+##  [85] 0.25115337 0.19566115 0.14157825 0.30340759 0.24987091 0.13789143
+##  [91] 0.26844831 0.25168133 0.24085048 0.56755380 0.30091691 0.27461892
+##  [97] 0.23053625 0.12959360 0.19212221 0.08477143 0.30387513 0.20571197
+## [103] 0.22449902 0.14555498
 ```
-:::
 
-```{.r .cell-code}
+```r
 samples[["BUGSoutput"]][["mean"]][["alpha"]]
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-  [1] 0.24363561 0.38099509 0.16611570 0.05870858 0.44541753 0.25460524
-  [7] 0.36767672 0.23476696 0.44505258 0.33817409 0.27992149 0.39295513
- [13] 0.45811466 0.44414724 0.27599711 0.33256416 0.28127193 0.19886409
- [19] 0.15020036 0.15007630 0.20071425 0.30631198 0.41317766 0.22566053
- [25] 0.16507819 0.16284637 0.16577683 0.16011672 0.35144414 0.19458579
- [31] 0.21143406 0.24191021 0.20251360 0.20473390 0.22525225 0.41899465
- [37] 0.18463523 0.26008646 0.07160255 0.17586408 0.46304595 0.28874947
- [43] 0.26791704 0.23869948 0.43461931 0.15265117 0.47777309 0.37117781
- [49] 0.28858762 0.32263743 0.25217010 0.44251335 0.22246116 0.29161114
- [55] 0.29155159 0.40844433 0.20469305 0.55937665 0.55516553 0.27400388
- [61] 0.14973339 0.26492794 0.58056652 0.06170906 0.36817910 0.20901524
- [67] 0.41456678 0.20116955 0.18162018 0.31642217 0.19490030 0.19226188
- [73] 0.16459913 0.04944577 0.36517053 0.41578336 0.22215949 0.18926954
- [79] 0.06785762 0.17882435 0.15743556 0.22711374 0.09039516 0.19777601
- [85] 0.26668738 0.20548440 0.14957842 0.31262932 0.25390329 0.21316443
- [91] 0.27546275 0.27410945 0.26329947 0.58367098 0.30682784 0.28520247
- [97] 0.24375882 0.15404669 0.21396852 0.12316416 0.30993919 0.23006981
-[103] 0.24180827 0.15126939
+##   [1] 0.24363561 0.38099509 0.16611570 0.05870858 0.44541753 0.25460524
+##   [7] 0.36767672 0.23476696 0.44505258 0.33817409 0.27992149 0.39295513
+##  [13] 0.45811466 0.44414724 0.27599711 0.33256416 0.28127193 0.19886409
+##  [19] 0.15020036 0.15007630 0.20071425 0.30631198 0.41317766 0.22566053
+##  [25] 0.16507819 0.16284637 0.16577683 0.16011672 0.35144414 0.19458579
+##  [31] 0.21143406 0.24191021 0.20251360 0.20473390 0.22525225 0.41899465
+##  [37] 0.18463523 0.26008646 0.07160255 0.17586408 0.46304595 0.28874947
+##  [43] 0.26791704 0.23869948 0.43461931 0.15265117 0.47777309 0.37117781
+##  [49] 0.28858762 0.32263743 0.25217010 0.44251335 0.22246116 0.29161114
+##  [55] 0.29155159 0.40844433 0.20469305 0.55937665 0.55516553 0.27400388
+##  [61] 0.14973339 0.26492794 0.58056652 0.06170906 0.36817910 0.20901524
+##  [67] 0.41456678 0.20116955 0.18162018 0.31642217 0.19490030 0.19226188
+##  [73] 0.16459913 0.04944577 0.36517053 0.41578336 0.22215949 0.18926954
+##  [79] 0.06785762 0.17882435 0.15743556 0.22711374 0.09039516 0.19777601
+##  [85] 0.26668738 0.20548440 0.14957842 0.31262932 0.25390329 0.21316443
+##  [91] 0.27546275 0.27410945 0.26329947 0.58367098 0.30682784 0.28520247
+##  [97] 0.24375882 0.15404669 0.21396852 0.12316416 0.30993919 0.23006981
+## [103] 0.24180827 0.15126939
 ```
-:::
-:::
-
 
 We see that the parameter estimates for every individual vary quite substantially.
 
 We can also have a look at some more summary characteristics:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 kable(head(samples$BUGSoutput$summary)) 
 ```
 
-::: {.cell-output-display}
+
+
 |         |      mean|        sd|      2.5%|       25%|       50%|       75%|     97.5%|     Rhat| n.eff|
 |:--------|---------:|---------:|---------:|---------:|---------:|---------:|---------:|--------:|-----:|
 |alpha[1] | 0.2436356| 0.1020531| 0.0847373| 0.1748214| 0.2310802| 0.2936367| 0.4993542| 1.013690|   280|
@@ -1428,39 +1304,29 @@ kable(head(samples$BUGSoutput$summary))
 |alpha[4] | 0.0587086| 0.0466085| 0.0042575| 0.0247968| 0.0478950| 0.0799808| 0.1818798| 1.008371|   420|
 |alpha[5] | 0.4454175| 0.2363407| 0.0377766| 0.2725224| 0.4440289| 0.6050226| 0.9218960| 1.219106|    25|
 |alpha[6] | 0.2546052| 0.1346931| 0.0503964| 0.1644994| 0.2304303| 0.3204738| 0.5923891| 1.010851|   350|
-:::
-:::
-
 
 Here, we see for every individual parameter the `mean` (as we just looked at them right before), but also the credibility intervals of the posterior distribution. If you want to look at the posterior distributions of some parameters specifically, you can plot them using commands from the bayesplot package:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # install.packages("bayesplot")
 bayesplot::mcmc_dens(samples$BUGSoutput$sims.array, pars = "alpha[1]") + theme_classic()
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-32-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/posterior-plot-1.png)<!-- -->
 
 
 Importantly, we also get information on the effective sample size `n.eff` and `Rhat`. `n.eff` is an estimate of how many “independent” draws your correlated chains are worth. `Rhat` is basically a measure for convergence (how well your different chains mix and converge on the same value distribution). Typically, values below 1.01 indicate good convergence. Let's check if that's the case here by ranking the rows from highest to lowest Rhat:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 as.data.frame(samples$BUGSoutput$summary) %>% 
   arrange(desc(Rhat)) %>% 
   head() %>% kable()
 ```
 
-::: {.cell-output-display}
+
+
 |          |      mean|        sd|      2.5%|       25%|       50%|       75%|     97.5%|     Rhat| n.eff|
 |:---------|---------:|---------:|---------:|---------:|---------:|---------:|---------:|--------:|-----:|
 |rho[59]   | 0.1845954| 0.2487388| 0.0006319| 0.0170391| 0.0680440| 0.2708726| 0.8778392| 1.373966|    16|
@@ -1469,17 +1335,12 @@ as.data.frame(samples$BUGSoutput$summary) %>%
 |alpha[5]  | 0.4454175| 0.2363407| 0.0377766| 0.2725224| 0.4440289| 0.6050226| 0.9218960| 1.219106|    25|
 |alpha[36] | 0.4189947| 0.1400920| 0.1991224| 0.3187417| 0.3967307| 0.4990670| 0.7553758| 1.217253|    22|
 |rho[45]   | 0.3255276| 0.3215597| 0.0142105| 0.0944510| 0.2145167| 0.4571568| 1.2022146| 1.182813|    26|
-:::
-:::
-
 
 We see that for some parameters, the chains have not mixed well (Rhats up to 1.37). Visually, this can also be checked by looking at traceplots (plotting all chains' sampled values across the iterations). Good convergence (low Rhats) will be resembled visually by traceplots which look like "hairy caterpillars": For example, this is the case for the 98th individual's delta parameter, whereas the 59th individual's alpha parameter shows particularly bad convergence:
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 bayesplot::mcmc_trace(
   samples$BUGSoutput$sims.array,
   pars = c("delta[98]", "alpha[59]"),
@@ -1487,18 +1348,12 @@ bayesplot::mcmc_trace(
 ) + ggplot2::scale_color_discrete()
 ```
 
-::: {.cell-output .cell-output-stderr}
 ```
-Scale for colour is already present.
-Adding another scale for colour, which will replace the existing scale.
+## Scale for colour is already present.
+## Adding another scale for colour, which will replace the existing scale.
 ```
-:::
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-34-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/mcmc-plot-1.png)<!-- -->
 
 One possible way to improve convergence would be to use longer chains (more iterations per chain).
 
@@ -1508,18 +1363,12 @@ Now that we have our individual parameter estimates, let's plot the value and we
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
-source(here("tutorials", "BayesianCognitiveModeling","helper_functions", "CPT_plotting.R")) # calls functions for plotting
+```r
+source(here("BayesianCognitiveModeling","helper_functions", "CPT_plotting.R")) # calls functions for plotting
 v_fun_TK92(samples = samples)
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-35-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/value-function-ind-1.png)<!-- -->
 
 ... and we see that even though there is some interindividual variability, all participants show the distortion of outcome values as predicted by CPT.
 
@@ -1527,17 +1376,11 @@ Next, we plot the probability weighting function:
 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 w_fun_GE87(samples = samples)
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-36-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/weighting-function-ind-1.png)<!-- -->
 
 ... and again we see that even though there is some interindividual variability, all participants show the distortion of objective probabilities as predicted by CPT.
 
@@ -1557,15 +1400,14 @@ First, we want to model different empirical data. Additionally to the descriptio
 Let's have a look at the sampling data, and we'll see that it varies across problems and participants if and how samples are drawn from each option (`SampVal`) before a choice is made (`response`):
 
 
-::: {.cell}
-
-```{.r .cell-code}
-samples_kellen<- openxlsx::read.xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Sampling_experience") %>% # read in sampling info
+```r
+samples_kellen<- openxlsx::read.xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Sampling_experience") %>% # read in sampling info
   dplyr::rename(ProblemName = ProblemID, ProblemID = ProblemName)
 head(samples_kellen, n = 20 ) %>% kable()
 ```
 
-::: {.cell-output-display}
+
+
 | ParticipantID|ParticipantCode |ProblemID  | ProblemName| outcomeA1| probA1| outcomeA2| probA2| outcomeB1| probB1| outcomeB2| probB2|SampVal |response |
 |-------------:|:---------------|:----------|-----------:|---------:|------:|---------:|------:|---------:|------:|---------:|------:|:-------|:--------|
 |             1|1_er171989      |rieskamp7  |          47|       130|   76.0|       900|   24.0|       560|    9.0|       190|   91.0|A1      |-99      |
@@ -1588,37 +1430,39 @@ head(samples_kellen, n = 20 ) %>% kable()
 |             1|1_er171989      |rieskamp38 |          78|      -630|   25.0|      -300|   75.0|      -570|   84.0|      -900|   16.0|A2      |-99      |
 |             1|1_er171989      |rieskamp38 |          78|      -630|   25.0|      -300|   75.0|      -570|   84.0|      -900|   16.0|-99     |A        |
 |             1|1_er171989      |hertwig7   |           7|         3|   25.0|         0|   75.0|        32|    2.5|         0|   97.5|A1      |-99      |
-:::
-:::
-
 
 Based on this sampling data, "subjective probabilities" are calculated in DFE from the relative frequency by which outcomes are encountered for each option. For example, we saw above that subject 1 (ParticipantCode `1_er171989 `) has only sampled once from each option in problem 47 before making a choice. Thus, the below subjective probabilities result for this problem and this particular participant, where `option A` seemingly has a sure outcome of 130 and `option B` seemingly has a sure outcome of 190: 
 
 
-::: {.cell}
-
-```{.r .cell-code}
-problems_exp <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Lottery_problems_experienced") %>% # read in choice problems
+```r
+problems_exp <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Lottery_problems_experienced") %>% # read in choice problems
   dplyr::rename(probA3 = 8, outcomeA3 = 9, probB3 = 14, outcomeB3 = 15) # add missing variable names for third outcomes
+```
+
+```
+## New names:
+## • `` -> `...8`
+## • `` -> `...9`
+## • `` -> `...14`
+## • `` -> `...15`
+```
+
+```r
 # problems_exp[is.na(problems_exp)==T] <- 0
 ```
-:::
 
-::: {.cell}
 
-```{.r .cell-code}
+```r
 problems_exp %>% 
   filter(ParticipantCode == "1_er171989" & ProblemName == 47) %>% 
   kable()
 ```
 
-::: {.cell-output-display}
+
+
 |ParticipantCode | ProblemName|ProblemID | probA1| outcomeA1| probA2| outcomeA2| probA3| outcomeA3| probB1| outcomeB1| probB2| outcomeB2| probB3| outcomeB3|
 |:---------------|-----------:|:---------|------:|---------:|------:|---------:|------:|---------:|------:|---------:|------:|---------:|------:|---------:|
 |1_er171989      |          47|rieskamp7 |      1|       130|      0|       900|      0|         0|      0|       560|      1|       190|      0|         0|
-:::
-:::
-
 
 Note, however, that of course the actual underlying *ground-truth* payoff distributions of the choice problems are identical to that of the problems in the description-based choices we started with in the beginning. But since the participants may have a different impression of the outcome's frequencies based on their sampling behavior, we use the calculated subjective probabilities for modeling.
 
@@ -1918,11 +1762,17 @@ To conclude: In hierarchical modeling, we can infer the group-level mean of a pa
 Now that we have an understanding how the new hierarchical model is structured and how the data should be structured that it's trying to access, let's go on to prepare our data for the model.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # read in choices
-choices_exp <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Choices_experience_neu") %>% dplyr::rename(ProblemID = 1)
+choices_exp <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Choices_experience_neu") %>% dplyr::rename(ProblemID = 1)
+```
+
+```
+## New names:
+## • `` -> `...1`
+```
+
+```r
 choices_long = choices_exp %>% gather(key = "ParticipantCode", value = "choice_num", -ProblemID) # gather choice data
 
 exp_kellen2016 = merge(problems_exp, choices_long, by = c("ParticipantCode", "ProblemID")) %>%
@@ -1949,15 +1799,11 @@ subjects = unique(exp_kellen2016$code)
 nSubjects =  length(subjects) # store count of subjects in this experiment for later use of variable
 nGambles =  length(unique(exp_kellen2016$ProblemID)) # number of total gambles
 ```
-:::
-
 
 Since sampling behavior differs between participants, the number of problems in each domain (Gain, Loss, Mixed) may also differ. Remember that we have to know the number of problems in each domain to loop over the specific sections in our JAGS model code. That's why it may be helpful to check and document the domain of the problems for each participant and to sort the problems accordingly.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 gambles_exp_sorted = exp_kellen2016 %>% 
   mutate(domain = case_when(A1o >= 0 & A2o >= 0 & A3o >= 0 & B1o >= 0 & B2o >= 0 & B3o >= 0   ~ 1, # "Gain" , 
                             A1o <= 0 & A2o <= 0 & A3o <= 0 & B1o <= 0 & B2o <= 0 & B3o <= 0 ~ 2, # "Loss" , 
@@ -1975,30 +1821,22 @@ domain_count[["nLoss"]]  = gambles_exp_sorted  %>% filter(domain == 2) %>% count
 domain_count[["nMixed"]]  = gambles_exp_sorted %>% filter(domain == 3) %>% count(code, name = "n") %>% pull(n)
 max_problems = max(domain_count[["nGambles"]])
 ```
-:::
-
 
 Let's now re-transform the choice data to our standard format.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # create df with choice data
 choices_exp <- gambles_exp_sorted %>%
     dplyr::select(code, choice_num, sort_key) %>%
     pivot_wider(names_from = code, values_from = choice_num)  %>%
     select(-sort_key)
 ```
-:::
-
 
 Then, we calculate the cumulative probabilities.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # get only gamble columns
 gambles = gambles_exp_sorted %>% select(A1o:B3p) %>% as.matrix()
 
@@ -2028,15 +1866,11 @@ cumprobsB = cbind(cumprobs[,8], rowSums(cumprobs[,c(8, 10)]), rowSums(cumprobs[,
 cumprobs <- cbind(cumprobsA,cumprobsB) # bind together
 gambles <- cbind(gambles,cumprobs) # also with overall df
 ```
-:::
-
 
 Lastly, we reformat all problem data in 3D objects (tensors) for our JAGS model.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # for prospects
 prospectsA.3d <- array(NA, dim = c(max_problems,  ncol(select(gambles, A1o:A3p)),  length(subjects)))
 for (j in seq_along(subjects)) {
@@ -2049,6 +1883,7 @@ for (j in seq_along(subjects)) {
   subject_data <- gambles %>% filter(code == subjects[j]) %>% select(B1o:B3p)
   prospectsB.3d[1:nrow(subject_data), , j] <- as.matrix(subject_data)
 }
+
 # for cumulative probabilities
 cumprobsA.3d <- array(NA, dim = c(max_problems, ncol(select(gambles, CPA1:CPA5)), length(subjects)))
 for (j in seq_along(subjects)) {
@@ -2062,16 +1897,12 @@ for (j in seq_along(subjects)) {
   cumprobsB.3d[1:nrow(subject_data), , j] <- as.matrix(subject_data)
 }
 ```
-:::
-
 
 
 Finally, we proceed with preparing the final data object, listing the parameters to be monitored, and set initial values for sampling.
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # collected data for JAGS
  data <- list(choices = as.matrix(choices_exp),
               nSubj = nSubjects,
@@ -2098,18 +1929,14 @@ oneinits <- list(alpha.phi = rep(qnorm(.4),nSubjects),
                  mu.phi.theta = qnorm(.01))
 myinits <- list(oneinits)
 ```
-:::
-
 
 And then we run our hierarchical model through JAGS. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 # if RDS file exists, load existing fits 
-if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds"))){
-  samples.exp <- readRDS(file = here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) 
+if(file.exists(here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds"))){
+  samples.exp <- readRDS(file = here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) 
   print(paste("model loaded"))
   
 # if RDS file doesn't exist, rerun fits:
@@ -2119,7 +1946,7 @@ if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_
 samples.exp <- jags.parallel(data = data, # empirical data
                              inits = myinits, # initial values for parameters in each chain
                              parameters = parameters, # parameters we want to record
-                             model.file = here("tutorials", "BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_hierarchical_TK92-onedomain.txt"), # model file
+                             model.file = here("BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_hierarchical_TK92-onedomain.txt"), # model file
                              n.chains = 8, # number of chains 
                              n.iter = 15000, # number of iterations per chain
                              n.burnin = 5000, # burn-in period
@@ -2128,29 +1955,24 @@ samples.exp <- jags.parallel(data = data, # empirical data
                              jags.seed = 2024,
                              DIC=T)
 
-saveRDS(samples.exp, here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
+saveRDS(samples.exp, here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
 print(paste("done fitting model to data"))
 }
 ```
 
-::: {.cell-output .cell-output-stdout}
 ```
-[1] "model loaded"
+## [1] "model loaded"
 ```
-:::
-:::
-
 
 Looking at the new JAGS object, we see that we not only have individual parameter estimates now:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 kable(head(samples.exp$BUGSoutput$summary)) 
 ```
 
-::: {.cell-output-display}
+
+
 |         |      mean|        sd|      2.5%|       25%|       50%|       75%|     97.5%|     Rhat| n.eff|
 |:--------|---------:|---------:|---------:|---------:|---------:|---------:|---------:|--------:|-----:|
 |alpha[1] | 0.9130232| 0.0293934| 0.8507947| 0.8958432| 0.9142109| 0.9323228| 0.9674813| 1.016275|   320|
@@ -2159,16 +1981,11 @@ kable(head(samples.exp$BUGSoutput$summary))
 |alpha[4] | 0.9213718| 0.0282442| 0.8649765| 0.9036379| 0.9202496| 0.9403376| 0.9780935| 1.011446|   440|
 |alpha[5] | 0.9220644| 0.0276580| 0.8667914| 0.9048209| 0.9212568| 0.9397599| 0.9793095| 1.008657|   630|
 |alpha[6] | 0.9257391| 0.0280644| 0.8736465| 0.9067125| 0.9243091| 0.9434347| 0.9863495| 1.013144|   400|
-:::
-:::
-
 
 But also group-level parameter estimates:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 samples.exp$BUGSoutput$summary %>%
     as.data.frame() %>%
     rownames_to_column("parameter") %>%
@@ -2176,49 +1993,36 @@ samples.exp$BUGSoutput$summary %>%
     kable()
 ```
 
-::: {.cell-output-display}
+
+
 |parameter |      mean|        sd|      2.5%|       25%|       50%|       75%|     97.5%|     Rhat| n.eff|
 |:---------|---------:|---------:|---------:|---------:|---------:|---------:|---------:|--------:|-----:|
 |mu.alpha  | 0.9188503| 0.0204486| 0.8787341| 0.9052575| 0.9183973| 0.9329725| 0.9581761| 1.025461|   230|
 |mu.gamma  | 0.6782304| 0.0281211| 0.6258290| 0.6590255| 0.6769748| 0.6962247| 0.7361741| 1.000371|  5000|
 |mu.lambda | 1.4458337| 0.0844935| 1.2875397| 1.3862805| 1.4448387| 1.5002297| 1.6185049| 1.003742|  1300|
 |mu.theta  | 0.0095750| 0.0014294| 0.0071083| 0.0085319| 0.0094924| 0.0104738| 0.0126528| 1.021960|   250|
-:::
-:::
-
 
 Using our plotting commands, you can now plot the individual and group-level value function at once:
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 v_fun_TK92(samples = samples.exp, color = "red")
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-49-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/value-function-hierarchical-1.png)<!-- -->
 
 And similarly for the probability weighting function. 
 
 
-::: {.cell}
-
-```{.r .cell-code}
+```r
 w_fun_TK92(samples = samples.exp, color = "red")
 ```
 
-::: {.cell-output-display}
-![](bayesian_cognitive_modeling_files/figure-html/unnamed-chunk-50-1.png){width=672}
-:::
-:::
-
+![](bayesian_cognitive_modeling_files/figure-html/weighting-function-hierarchical-1.png)<!-- -->
 
 # Debugging JAGS errors
 
 As always in everyday life when working with code, it is likely that you will run into errors at some point. For JAGS, unfortunately, the error messages are often not very informative.
 While there is an unpredictable number of errors that JAGS can throw out, here, we treat the below list as a work-in-progress documentation of common errors that we have encountered, and what might be potential ways to solve them.
 
+We will continue expanding this section.

@@ -3,13 +3,9 @@ title: "Bayesian Cognitive Modeling"
 subtitle: "Tutorial"
 author: "Linus Hof & Nuno Busch"
 date: "`r Sys.time()`"
-format: 
-  html:
-    keep-md: true
-editor_options: 
-  markdown: 
-    wrap: sentence
-  chunk_output_type: console
+output:
+  html_document:
+    keep_md: true
 ---
 
 ```{r include=FALSE}
@@ -18,14 +14,15 @@ pacman::p_load(readxl ,
                tidyverse , 
                magrittr , 
                knitr, 
-               here
+               here , 
+               R2jags
                )
 
 set.seed(1) # setting seed to make random samples reproducible
 ```
 
 ```{r include=FALSE}
-here::i_am("tutorials/BayesianCognitiveModeling/bayesian_cognitive_modeling.Rmd")
+here::i_am("BayesianCognitiveModeling/bayesian_cognitive_modeling.Rmd")
 ```
 
 
@@ -44,8 +41,8 @@ The different columns represent different features of both options.
 #| output: false
 
 # read data
-problems <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 1) # problem features
-description <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE) # DFD choices 
+problems <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 1) # problem features
+description <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE) # DFD choices 
 
 # clean data
 
@@ -66,7 +63,7 @@ description  %<>% rename(label = ...1)
 #| eval: false
 
 # read data
-problems <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet=1) # problem features
+problems <- read_xlsx("BayesianCognitiveModeling/kellen2016.xlsx", sheet=1) # problem features
 
 # clean data
 problems %<>% 
@@ -161,7 +158,7 @@ To illustrate, the following table shows the choices of 10 participants (columns
 #| output: false
 
 # read and clean data
-description <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE)
+description <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = 3, col_names = TRUE)
 description  %<>% rename(label = ...1)
 ```
 
@@ -169,7 +166,7 @@ description  %<>% rename(label = ...1)
 #| eval: false
 
 # read and clean data
-description <- read_xlsx("tutorials/BayesianCognitiveModeling/kellen2016.xlsx", sheet = 3, col_names = TRUE)
+description <- read_xlsx("BayesianCognitiveModeling/kellen2016.xlsx", sheet = 3, col_names = TRUE)
 description  %<>% rename(label = ...1)
 ```
 
@@ -238,7 +235,7 @@ where $\alpha$ is a number that usually takes values between $0$ and $1$, and $\
 $\alpha$ controls the curvature of the value function (the diminishing marginal utility), $\lambda$ controls the steepness of the value function in the loss domain relative to the gain domain (loss aversion).
 The figure below illustrates the form of this value transformation when $\lambda = 1.2$, for different values of alpha: $\alpha = 1$, $\alpha = .9$, $\alpha = .8$.
 
-```{r}
+```{r value-function-demo}
 vf <- expand_grid(outcome = c(seq(-10, 10, .1)) , 
                   alpha = seq(from = .8, to = 1, by = .1)) %>% 
   mutate(v = case_when(outcome >= 0 ~ outcome^alpha , 
@@ -269,7 +266,7 @@ where $\gamma$ is a number that usually takes values between $0$ and $2$ and $\d
 
 The figure below illustrates the form of this transformation when $\gamma = .5$, $\gamma = .1$ or $\gamma = 1.5$ (line colors), and when $\delta = .4$, $\delta = 1.2$ or $\delta=2$ (different plot facets).
 
-```{r}
+```{r weighting-function-demo}
 #| fig-width: 10
 #| fig-height: 3
 
@@ -583,7 +580,7 @@ This reflects the case that when the options do not really differ, we also have 
 Then, when the difference in valuations becomes positive, the probability for choosing `Option A` *increases*; and when the difference becomes negative, the probability for choosing `Option A` *decreases*.
 As can be seen, $\phi$ affects how strongly the choice probability is influenced by the difference magnitude between the option's valuations. 
 
-```{r}
+```{r logit-demo}
 logit <- expand_grid(Diff = c(seq(-4, 4, .01)) , 
                      phi = c(0, .5, 1)) %>%
   mutate(Prob = 1/(1+(exp(-phi*Diff)) ))
@@ -872,8 +869,8 @@ Since it can take a while to fit the model, here you can also load the RDS file 
 ```{r }
 
 # if RDS file exists, load existing fits 
-if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds"))){
-  samples <- readRDS(file = here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) 
+if(file.exists(here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds"))){
+  samples <- readRDS(here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) 
   print(paste("model loaded"))
   
 # if RDS file doesn't exist, rerun fits:
@@ -883,7 +880,7 @@ if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_
 samples <- jags.parallel(data = data , # empirical data
                    inits = params_init , # initial values for parameters in each chain
                    parameters.to.save = params_cpt , # parameters we want to record
-                   model.file = here("tutorials", "BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_individual.txt"), # model file
+                   model.file = here("BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_individual.txt"), # model file
                    n.chains = 6, # number of chains 
                    n.iter = 2000 , # number of iterations per chain
                    n.burnin = 1000 , # burn-in period
@@ -892,7 +889,7 @@ samples <- jags.parallel(data = data , # empirical data
                    DIC = TRUE , 
                    jags.seed = 1223) # seed to enable reproducibility
 
-saveRDS(samples, here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
+saveRDS(samples, here("BayesianCognitiveModeling", "modelfits", "cpt_model.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
 print(paste("done fitting model to data"))
 }
 
@@ -928,7 +925,7 @@ kable(head(samples$BUGSoutput$summary))
 
 Here, we see for every individual parameter the `mean` (as we just looked at them right before), but also the credibility intervals of the posterior distribution. If you want to look at the posterior distributions of some parameters specifically, you can plot them using commands from the bayesplot package:
 
-```{r}
+```{r posterior-plot}
 # install.packages("bayesplot")
 bayesplot::mcmc_dens(samples$BUGSoutput$sims.array, pars = "alpha[1]") + theme_classic()
 ```
@@ -946,7 +943,7 @@ as.data.frame(samples$BUGSoutput$summary) %>%
 We see that for some parameters, the chains have not mixed well (Rhats up to 1.37). Visually, this can also be checked by looking at traceplots (plotting all chains' sampled values across the iterations). Good convergence (low Rhats) will be resembled visually by traceplots which look like "hairy caterpillars": For example, this is the case for the 98th individual's delta parameter, whereas the 59th individual's alpha parameter shows particularly bad convergence:
 
 
-```{r}
+```{r mcmc-plot}
 bayesplot::mcmc_trace(
   samples$BUGSoutput$sims.array,
   pars = c("delta[98]", "alpha[59]"),
@@ -962,8 +959,8 @@ One possible way to improve convergence would be to use longer chains (more iter
 Now that we have our individual parameter estimates, let's plot the value and weighting function and we see the typical patterns of value und probability distortion that were predicted by CPT. To do so, we call a helper function that we have written for you in a seperate script. You have to provide the samples object returned by JAGS as an argument in case it has a different name. First, we plot the value function:
 
 
-```{r}
-source(here("tutorials", "BayesianCognitiveModeling","helper_functions", "CPT_plotting.R")) # calls functions for plotting
+```{r value-function-ind}
+source(here("BayesianCognitiveModeling","helper_functions", "CPT_plotting.R")) # calls functions for plotting
 v_fun_TK92(samples = samples)
 
 ```
@@ -973,7 +970,7 @@ v_fun_TK92(samples = samples)
 Next, we plot the probability weighting function:
 
 
-```{r}
+```{r weighting-function-ind}
 w_fun_GE87(samples = samples)
 ```
 
@@ -995,7 +992,7 @@ First, we want to model different empirical data. Additionally to the descriptio
 Let's have a look at the sampling data, and we'll see that it varies across problems and participants if and how samples are drawn from each option (`SampVal`) before a choice is made (`response`):
 
 ```{r}
-samples_kellen<- openxlsx::read.xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Sampling_experience") %>% # read in sampling info
+samples_kellen<- openxlsx::read.xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Sampling_experience") %>% # read in sampling info
   dplyr::rename(ProblemName = ProblemID, ProblemID = ProblemName)
 head(samples_kellen, n = 20 ) %>% kable()
 ```
@@ -1005,7 +1002,7 @@ Based on this sampling data, "subjective probabilities" are calculated in DFE fr
 ```{r}
 #| output: false
 
-problems_exp <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Lottery_problems_experienced") %>% # read in choice problems
+problems_exp <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Lottery_problems_experienced") %>% # read in choice problems
   dplyr::rename(probA3 = 8, outcomeA3 = 9, probB3 = 14, outcomeB3 = 15) # add missing variable names for third outcomes
 # problems_exp[is.na(problems_exp)==T] <- 0
 ```
@@ -1318,7 +1315,7 @@ Now that we have an understanding how the new hierarchical model is structured a
 #| output: false
 #| 
 # read in choices
-choices_exp <- read_xlsx(here("tutorials", "BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Choices_experience_neu") %>% dplyr::rename(ProblemID = 1)
+choices_exp <- read_xlsx(here("BayesianCognitiveModeling", "kellen2016.xlsx"), sheet = "Choices_experience_neu") %>% dplyr::rename(ProblemID = 1)
 choices_long = choices_exp %>% gather(key = "ParticipantCode", value = "choice_num", -ProblemID) # gather choice data
 
 exp_kellen2016 = merge(problems_exp, choices_long, by = c("ParticipantCode", "ProblemID")) %>%
@@ -1478,8 +1475,8 @@ And then we run our hierarchical model through JAGS.
 
 ```{r}
 # if RDS file exists, load existing fits 
-if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds"))){
-  samples.exp <- readRDS(file = here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) 
+if(file.exists(here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds"))){
+  samples.exp <- readRDS(file = here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) 
   print(paste("model loaded"))
   
 # if RDS file doesn't exist, rerun fits:
@@ -1489,7 +1486,7 @@ if(file.exists(here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_
 samples.exp <- jags.parallel(data = data, # empirical data
                              inits = myinits, # initial values for parameters in each chain
                              parameters = parameters, # parameters we want to record
-                             model.file = here("tutorials", "BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_hierarchical_TK92-onedomain.txt"), # model file
+                             model.file = here("BayesianCognitiveModeling", "JAGS_models", "JAGS_cpt_model_hierarchical_TK92-onedomain.txt"), # model file
                              n.chains = 8, # number of chains 
                              n.iter = 15000, # number of iterations per chain
                              n.burnin = 5000, # burn-in period
@@ -1498,7 +1495,7 @@ samples.exp <- jags.parallel(data = data, # empirical data
                              jags.seed = 2024,
                              DIC=T)
 
-saveRDS(samples.exp, here("tutorials", "BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
+saveRDS(samples.exp, here("BayesianCognitiveModeling", "modelfits", "cpt_model_hierarchical.rds")) # once the model is done fitting, we first save the samples to make sure they don't get lost.
 print(paste("done fitting model to data"))
 }
 
@@ -1522,13 +1519,13 @@ samples.exp$BUGSoutput$summary %>%
 
 Using our plotting commands, you can now plot the individual and group-level value function at once:
 
-```{r}
+```{r value-function-hierarchical}
 v_fun_TK92(samples = samples.exp, color = "red")
 ```
 
 And similarly for the probability weighting function. 
 
-```{r}
+```{r weighting-function-hierarchical}
 w_fun_TK92(samples = samples.exp, color = "red")
 ```
 

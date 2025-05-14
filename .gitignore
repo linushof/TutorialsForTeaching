@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+*.html
+BayesianCognitiveModeling/bayesian_cognitive_modeling_files/libs/
