@@ -2,9 +2,11 @@ Bayesian Cognitive Modeling Tutorial
 ================
 Linus Hof & Nuno Busch
 
-Last updated: 2025-05-14
+Last updated: 2025-05-15
 
-## Risky Choice
+## Part I: Risky Choice and its Models
+
+### Risky Choice
 
 Sometimes in your life, you make choices between certain outcomes (e.g.,
 whether to buy an Android phone or an iPhone). In other situations, you
@@ -221,7 +223,7 @@ kable(problems)
 | 111 | DKErev5 | Mixed | 1.000 | 40.0 | 0.000 | 0 | 0.500 | 140.0 | 0.500 | -60 |
 | 113 | DKErev7 | Mixed | 0.500 | 20.0 | 0.500 | -20 | 0.500 | 100.0 | 0.500 | -100 |
 
-## Expected Value Maximization
+### Expected Value Maximization
 
 What do you think, how do people choose between such lotteries? They are
 probably trying to maximize rewards (gain the highest outcome values and
@@ -439,7 +441,7 @@ problems %>%
 | 111 | DKErev5 | Mixed | 1.000 | 40.0 | 0.000 | 0 | 0.500 | 140.0 | 0.500 | -60 | 40.00 | 40.00 | NA | NA |
 | 113 | DKErev7 | Mixed | 0.500 | 20.0 | 0.500 | -20 | 0.500 | 100.0 | 0.500 | -100 | 0.00 | 0.00 | NA | NA |
 
-## Cumulative Prospect Theory: A Cognitive Model for Risky Choice
+### Cumulative Prospect Theory: A Cognitive Model for Risky Choice
 
 One of the key accomplishments in decision making research is the
 development of cumulative prospect theory (CPT) by Amos Tversky and
@@ -497,7 +499,7 @@ decision weights with a probability weighting function $`w(.)`$.
 Next, we consider the value and the probability weighting function in
 more detail.
 
-### Value function
+#### Value function
 
 The value function takes each objective outcome $`x_i`$ as input and
 returns a respective subjective value $`v(x_i)`$ as output, according
@@ -553,7 +555,7 @@ positive/negative) the objective outcomes get. This is the most common
 form observed in empirical data when fitting the $`\alpha`$ parameter to
 the observed choices (see below).
 
-### Probability weighting function
+#### Probability weighting function
 
 The weighting function takes a probability $`p_i`$ between $`0`$ and
 $`1`$ as input and returns a *transformed* probability (a decision
@@ -819,7 +821,9 @@ obvious question is: could this prediction accuracy be improved even
 further if we chose other parameter values? How can we find out which
 parameter values fit best?
 
-## Fitting CPT
+## Part II: Bayesian Parameter Estimation
+
+### Fitting CPT
 
 In the above demonstration of CPT, we showed that applying the
 transformations implemented in CPT lead to an improved prediction over
@@ -847,7 +851,7 @@ a *Bayesian* perspective:
 2.  Calculate the probability of the data given these parameter values
     (likelihood)
 3.  Weigh (multiply) the likelihood with the initial plausibility of
-    parameter values (the prior)
+    parameter values (prior)
 
 The product we obtain from Step 3 (i.e., the multiplication of prior and
 likelihood) gives us the updated probability of the respective parameter
@@ -857,14 +861,14 @@ values given the data. This is called the *posterior probability*:
 
 p(\Theta|D) \propto p(\Theta) p(D|\Theta)
 ```
-If we repeat these steps for all possible combinations of parameter
-values, we can simply take the parameter values that have the biggest
-posterior probability given the data. Before demonstrating how we can
-compute these posteriors for our CPT model using `R` and a simulation
-program calls `JAGS`, we explain the different parts of this Bayesian
-updating process in more detail.
+If we do these steps for all possible combinations of parameter values,
+we can take the parameter values that have the biggest posterior
+probability given the data. Before demonstrating how we can compute
+these posteriors for our CPT model using `R` and a simulation program
+called `JAGS`, we explain the different parts of this Bayesian updating
+process in more detail.
 
-### Prior
+#### Prior
 
 The prior probability, $`p(\Theta)`$ expresses our initial beliefs about
 the plausibility of different parameter values. For example, before
@@ -882,9 +886,9 @@ other words, the prior is a probability distribution over parameter
 values.
 <!--maybe we can get more detailed here, e.g., provide an example-->
 
-### Likelihood
+#### Likelihood
 
-#### The Most Simple Choice Model
+##### The Most Simple Choice Model
 
 The likelihood is the probability of the data given the model and a set
 of parameter values.
@@ -923,7 +927,7 @@ We can now extend this example to more choices and more candidate values
 for $`\theta`$. Note that the likelihood for multiple choices is simply
 the product of all choices’ individual likelihoods, assuming that the
 choices are independent. In the following example, we take the candidate
-values `\theta=`0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 and
+values \$=\$0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 and
 calculate the likelihood of the choices of all participants on Problem 1
 from Kellen et al. (2016) data given these parameter values.
 
@@ -966,7 +970,7 @@ likely given the data when we assume a moderate to high probability of
 choosing `Option 1` (parameter values between 0.7 and 0.8) when we rely
 on this simple binomial decision model.
 
-#### Likelihood for CPT
+##### Likelihood for CPT
 
 Although CPT is a more complex model than the simple binomial from
 above, the idea is exactly the same. We have a number of free (unknown)
@@ -1036,14 +1040,88 @@ logit %>% ggplot(aes(Diff, Prob, group = as.factor(phi), color = as.factor(phi))
 
 ![](bayesian_cognitive_modeling_files/figure-gfm/logit-demo-1.png)<!-- -->
 
-### Using MCMC/JAGS to obtain the posterior
+#### Markov chain Monte Carlo sampling
 
-\*\* LINUS EXPANDS ON HOW MCMC WORKS WITH FEW EXAMPLES HERE \*\*
+Now that we know how to obtain the likelihood and specify a prior, we
+only need one more step to obtain the posterior probabilities of the
+parameter values. Above, we already stated that this step involves the
+multiplication of the likelihood and the prior. Importantly, while doing
+so, we also need to ensure that we obtain a proper probability
+distribution in the end, where all individual products (posterior
+probabilities) sum up to 1. To achieve this, we need to divide each
+individual product by the sum of all products,
 
-## Fitting the Model to description-based choices from Kellen et al. (2016)
+``` math
+
+p(\Theta|D) = \frac{p(\Theta) p(D|\Theta)}{ \int p(\Theta) p(D|\Theta) d\Theta} \; ,
+```
+
+where the new denominator is the *marginal likelihood*. The primary
+function of the marginal likelihood is to ensures that all posterior
+probabilities sum up to 1. (However, it can also be thought of as the
+overall model evidence, as it captures how likely the data is given all
+possible parameter values and their prior plausibility—i.e., the average
+probability of the data given the model.)
+
+While the integral is just the proper way of summing over the continuous
+parameter values, it is often difficult or impossible to be solved
+analytically. (Remember that $`\Theta`$ usually contains multiple
+parameters over which we need to integrate, leading to a
+high-dimensional integral with no closed-form solution.) However,
+obtaining a proper probability distribution and doing Bayesian inference
+is still possible via numerical approximation techniques. The most
+widely adopted technique for Bayesian inference is *Markov chain Monte
+Carlo sampling* (MCMC). Various statistical programs (more specifically,
+probabilistic programming languages) use a clever MCMC algorithm
+together with the likelihood and prior to compute a sample (or sampling
+distribution) of posterior probabilities. With a larger enough number of
+posterior samples, the resulting sampling distribution should
+approximate the posterior probability distribution which we would have
+otherwise obtained as a closed-form analytic solution (but couldn’t due
+to intractability). We then use (summaries of) the resulting sampling
+distributions for all parameters to make inference about the most likely
+parameter values and the uncertainty about possible parameter values
+(e.g., a sample with a large standard deviation means that many
+different parameter values are plausible given the current data).
+
+The MCMC algorithms implemented in different programs differ in detail.
+However, here we briefly summarize the principle logic behind MCMC that
+ensures that the sampling distribution approximates the “true” posterior
+distribution—i.e., parameter values with a high “true” posterior
+probability should end up often in the sample, while there should be
+almost no implausible values.
+
+1.  Take a set of initial values for all model parameters that need to
+    be fit to the data and compute the posterior (likelihood x prior)
+    for this initial set.
+2.  Generate another set of parameter values (proposals) by adding some
+    random perturbation to the initial values and compute the posterior
+    for the proposal value.
+3.  Compare the posteriors of the initial values and the proposal
+    values.
+4.  Accept (include in the sample) the proposal values if their
+    posterior is larger than that of the initial values.
+5.  Otherwise accept/deny the proposals with a probability that is
+    proportional to the ratio of the posteriors
+    $`\frac{posterior(proposal)}{posterior(initial)}`$.
+6.  Repeat this procedure many times by comparing the last accepted
+    values against new proposal values, which are generated by adding a
+    random perturbation to these accepted values.
+
+Essentially, this principal procedure ensures that proposals with a low
+posterior are often denied and don’t enter the sample, while candidates
+with a high posterior end up in the sample. Over time, the MCMC
+algorithm should produce only “good” candidates with relatively high
+posterior probabilities that differ only sightly (given there are no
+other issues with the model). The final collection of parameter values
+then is a good approximation of the posterior probability. For more
+details on MCMC and a set of different algorithms, see, e.g., this
+[tutorial paper](http://link.springer.com/10.3758/s13423-016-1015-8).
+
+#### Fitting the Model to description-based choices from Kellen et al. (2016)
 
 Now how does MCMC sampling for model fitting work in practice? We can
-conventiencly use JAGS through R. To use it, first download and install
+conveniently use JAGS through R. To use it, first download and install
 JAGS on your computer via [this
 link](https://sourceforge.net/projects/mcmc-jags/). Mac users might need
 to additionally install the GNU Fortran (gfortran-4.2.3.dmg) library
@@ -1520,7 +1598,7 @@ bayesplot::mcmc_trace(
 One possible way to improve convergence would be to use longer chains
 (more iterations per chain).
 
-# \*\* POTENTIALLY EXPAND ON BUGSOUTPUT HERE \*\*
+\*\* POTENTIALLY EXPAND ON BUGSOUTPUT HERE \*\*
 
 Now that we have our individual parameter estimates, let’s plot the
 value and weighting function and we see the typical patterns of value
@@ -1552,7 +1630,9 @@ w_fun_GE87(samples = samples)
 variability, all participants show the distortion of objective
 probabilities as predicted by CPT.
 
-# Fitting a hierarchical Model to experience-based choices from Kellen et al. (2016)
+## Part III: Improving the Model
+
+### Fitting a hierarchical Model to experience-based choices from Kellen et al. (2016)
 
 To illustrate the flexibility of computational modeling and its
 different facets, we want to conclude with a second example. In
@@ -1562,7 +1642,7 @@ comparison to our previous modeling approach, we make three key changes:
 2.  Fitting a different probability weighting function
 3.  Fitting a *hierarchical* implementation of CPT
 
-### Experience-based choices
+#### Experience-based choices
 
 First, we want to model different empirical data. Additionally to the
 description-based choices modeled above, Kellen et al. also had a
@@ -1840,7 +1920,7 @@ structure it expects.
       }   
     }
 
-### The probability weighting function and other model changes
+#### The probability weighting function and other model changes
 
 When going through the model code, you may have noted there are a few
 things different than before. For example, the domain-specific CPT code
@@ -1898,7 +1978,7 @@ like `p_hA[i]`, now we use three-dimensional objects `cumprobsA[i,1,j]`
 that contain all cumulative probabilities from one option for all
 participants $`j`$ and all problems $`i`$.
 
-### Hierarchical modeling
+#### Hierarchical modeling
 
 Another big difference is that we now implement a hierarchical modeling
 approach. What does this mean? Well, formal models can be applied to
@@ -2012,7 +2092,7 @@ robust in hierarchical models as they are constrained by the group-level
 distribution, allowing the estimation of individual parameters to
 benefit from the estimates of other participants.
 
-### Preparing the data for JAGS
+#### Data Preparation
 
 Now that we have an understanding how the new hierarchical model is
 structured and how the data should be structured that it’s trying to
@@ -2266,7 +2346,7 @@ w_fun_TK92(samples = samples.exp, color = "red")
 
 ![](bayesian_cognitive_modeling_files/figure-gfm/weighting-function-hierarchical-1.png)<!-- -->
 
-# Debugging JAGS errors
+## Appendix: Debugging JAGS errors
 
 As always in everyday life when working with code, it is likely that you
 will run into errors at some point. For JAGS, unfortunately, the error
