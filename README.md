@@ -10,6 +10,6 @@ An effective tutorial should help beginners to quickly learn the important basic
 Everyone (also outside of TUM) can make use of the tutorials. 
 However, all tutorials should be considered work in progress and can be subject to future changes. 
 
-## Suggestians & Contributions
+## Suggestions & Contributions
 
 Please make a pull request to suggest changes to an existing tutorial or add a new tutorial. 
