@@ -7,7 +7,9 @@ color = rgb(1/255, 100/255, 200/255, alpha = 1)
 ####### value function TK92 ##########
 ######################################
 vf_TK92 <- function(samples = samples, # JAGS output object name
-                       color = rgb(1/255, 100/255, 200/255, alpha = 1), # color for lines
+                    color = rgb(1/255, 100/255, 200/255, alpha = 1), # color for lines
+                    fontsize = 1, # controls font size of axis and tick labels
+                    condition = "", # condition for title of plot
                        alpha_subj = "alpha", # individual parameter names
                        lambda_subj = "lambda",
                        beta_subj = "alpha", # by default, the function will assume no separate curvature parameter for the loss domain. if there is one, that can be specified here
@@ -15,15 +17,48 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
                        lambda_mean = "mu.lambda",
                        beta_mean = "mu.alpha" # by default, the function will assume no separate curvature parameter for the loss domain. if there is one, that can be specified here
 ) {
+  
+  
   par(mfrow=c(1,1))
   a <- seq(-100, 100, by=0.1)
-  plot(a, a, "l", axes=FALSE, xlab='', ylab='', cex.axis=.7, lty=2, lwd=1, ylim=c(-10, 10), xlim=c(-20, 20), col="white")
-  par(xpd=FALSE)
-  title(paste("Value function"), cex.main=1.5, font.main=1)
-  axis(1, seq(from=-20, to=20, by=5), pos=0, cex.axis=.6, mgp=c(3, .1, 1), tck=-.01)
-  axis(2, seq(from=-10, to=10, by=2), pos=0, cex.axis=.6, tck=-.01, las=1, mgp=c(3, 0.6, 0))
-  mtext(side=1, text="Outcome", line=1)
-  mtext(side=2, text="Subjective Value", line=.5)
+  
+  # scale gaps to font size
+  lab_gap   <- 0.6 * fontsize   # distance of tick labels from axis line
+  title_gap <- 1.2 + 0.4*(fontsize - 1)  # distance of axis titles (mtext) from plot
+  
+  plot(a, a, type = "l", axes = FALSE, xlab = "", ylab = "",
+       cex.axis = fontsize * 1.1, lty = 2, lwd = 1,
+       ylim = c(-10, 10), xlim = c(-20, 20), col = "white")
+  par(xpd = FALSE)
+  title(paste0("Value function ", condition), cex.main = fontsize * 1.5, font.main = 1)
+  
+  axis(1, seq(-20, 20, by = 5), pos = 0,
+       cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+  axis(2, seq(-10, 10, by = 2), pos = 0,
+       cex.axis = 0.9*fontsize, tck = -0.01, las = 1, mgp = c(3, lab_gap, 0))
+  
+  mtext(text = "Outcome",          side = 1, line = title_gap, cex = fontsize)
+  mtext(text = "Subjective Value", side = 2, line = title_gap, cex = fontsize)
+  
+  
+  
+  # plot(a, a, "l", axes=FALSE, xlab='', ylab='', 
+  #      cex.axis=fontsize*1.1, # .6, 
+  #      lty=2, lwd=1, ylim=c(-10, 10), xlim=c(-20, 20), col="white")
+  # par(xpd=FALSE)
+  # title(paste("Value function"), cex.main=1.5, font.main=1)
+  # axis(1, seq(from=-20, to=20, by=5), pos=0, 
+  #      cex.axis= fontsize, # .6, 
+  #      mgp=c(3, .1, 1), tck=-.01)
+  # axis(2, seq(from=-10, to=10, by=2), pos=0, 
+  #      cex.axis=fontsize, # .6, 
+  #      tck=-.01, las=1, mgp=c(3, 0.6, 0))
+  # mtext(side=1, text="Outcome", 
+  #       cex = fontsize,
+  #       line=1)
+  # mtext(side=2, text="Subjective Value", 
+  #       cex = fontsize,
+  #       line=.5)
   
   # plot dashed line
   lines(a,a,col="black",lty=2,lwd=1)
@@ -66,7 +101,7 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
       
       legend(1, -2, inset=0, 
              legend = c(expression("Group-level estimate"), expression("Individual estimates")),
-             cex = 1.2, 
+             cex = 0.9 * fontsize, 
              col = c(color, color_subj), horiz = F,bty = "n",
              lty = 1,  # Solid line
              lwd = 2   # Line width
@@ -88,7 +123,9 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
 #########################################
 
   wf_TK92 <- function(samples = samples, 
-                         color = rgb(1/255, 100/255, 200/255, alpha = 1), # color for lines
+                      color = rgb(1/255, 100/255, 200/255, alpha = 1), # color for lines
+                      fontsize = 1, # controls font size of axis and tick labels
+                      condition = "", # condition for title of plot
                          domain_separation = F, # indicate if model has fitted different parameters for gain vs. loss domains - default is no
                          gamma_subj = "gamma", # individual parameter names
                          gamma.loss_subj = "gamma",
@@ -102,17 +139,38 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
     # if(!exists("gamma.loss", where = samples$BUGSoutput$mean) && !exists("mu.gamma.loss", where = samples$BUGSoutput$mean) ){
 
     #par(mfrow=c(2,2)) # par(mfrow=c(2,1))
-    par(mfrow=c(1,1))
-
-  a <- c(seq(0, 1, by=.001))
-  plot(a,a,"l",xlab='',ylab='',cex.axis=.7,lty=1,lwd = 2, col = "white",xpd = F, axes=F)
-  axis(1, las=1, cex.axis = .7)
-  axis(2, las=2, cex.axis = .7)
-  box()
-  title(paste("Probability weighting function"),cex.main = 1.5, font.main = 1)
-  mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2.5)
-  mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2.5)
+    
+      #par(mfrow=c(1,1))
+    par(mfrow = c(1,1),
+          mar = c(4 + fontsize, 4 + fontsize, 2, 2))  # scale margins
+    a <- c(seq(0, 1, by=.001))
+    
+    # scale gaps to font size
+    lab_gap   <- 0.6 * fontsize   # distance of tick labels from axis line
+    
+    
+    
+  plot(a, a, type = "l", xlab = "", ylab = "",
+       cex.axis = fontsize * 1.1, lty = 2, lwd = 1,
+      # a,a,"l",xlab='',ylab='',
+      #  cex.axis=.7,
+      #  lty=1,lwd = 2, 
+       col = "white",xpd = F, axes=F)
+  # axis(1, las=1, cex.axis = .7)
+  # axis(2, las=2, cex.axis = .7)
+  # 
+  # par(xpd = FALSE)
   
+  axis(1, las=1, 
+       cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+  axis(2, las=2, 
+       cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+  
+  # box()
+  title(paste0("Probability weighting function ", condition),
+        cex.main = fontsize * 1.5, font.main = 1)
+  mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2* fontsize, cex = fontsize)
+  mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2* fontsize, cex = fontsize)
   
   
   # plot dashed line
@@ -151,7 +209,7 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
       
       legend(0.1, 1, inset=0, 
              legend = c(expression("Group-level estimate"), expression("Individual estimates")),
-             cex = 1.2, 
+             cex = 0.9 * fontsize, 
              col = c(color, color_subj), horiz = F,bty = "n",
              lty = 1,  # Solid line
              lwd = 2   # Line width
@@ -165,17 +223,25 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
   
   ##### if domain-separated weigthing parameters exist, plot several lines
     } else {
-      par(mfrow=c(1,2))
+      par(mfrow=c(1,2),  mar = c(4 + fontsize, 4 + fontsize, 2, 2))  # scale margins)
       
       ## plot Gain domain
       a <- c(seq(0, 1, by=.001))
-      plot(a,a,"l",xlab='',ylab='',cex.axis=.7,lty=1,lwd = 2, col = "white",xpd = F, axes=F)
-      axis(1, las=1, cex.axis = .7)
-      axis(2, las=2, cex.axis = .7)
-      box()
-      title(paste("Gain domain"),cex.main = 1.5, font.main = 1)
-      mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2.5)
-      mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2.5)
+      
+      lab_gap   <- 0.6 * fontsize   # distance of tick labels from axis line 
+      plot(a, a, type = "l", xlab = "", ylab = "",
+           cex.axis = fontsize * 1.1, lty = 2, lwd = 1,
+           col = "white",xpd = F, axes=F)
+      axis(1, las=1, 
+           cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+      axis(2, las=2, 
+           cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+      
+      title(paste0("Gain domain ", condition),
+            cex.main = fontsize * 1.5, font.main = 1)
+      mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2* fontsize, cex = fontsize)
+      mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2* fontsize, cex = fontsize)
+      
       
       # plot dashed line
       lines(a,a,col="black",lty=2,lwd=1)
@@ -225,13 +291,20 @@ vf_TK92 <- function(samples = samples, # JAGS output object name
       
       ## plot Loss domain
       a <- c(seq(0, 1, by=.001))
-      plot(a,a,"l",xlab='',ylab='',cex.axis=.7,lty=1,lwd = 2, col = "white",xpd = F, axes=F)
-      axis(1, las=1, cex.axis = .7)
-      axis(2, las=2, cex.axis = .7)
-      box()
-      title(paste("Loss domain"),cex.main = 1.5, font.main = 1)
-      mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2.5)
-      mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2.5)
+      
+      lab_gap   <- 0.6 * fontsize   # distance of tick labels from axis line 
+      plot(a, a, type = "l", xlab = "", ylab = "",
+           cex.axis = fontsize * 1.1, lty = 2, lwd = 1,
+           col = "white",xpd = F, axes=F)
+      axis(1, las=1, 
+           cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+      axis(2, las=2, 
+           cex.axis = 0.9* fontsize, tck = -0.01, mgp = c(3, lab_gap, 0))
+      
+      title(paste0("Loss domain ", condition),
+            cex.main = fontsize * 1.5, font.main = 1)
+      mtext(side = 1, text = substitute(paste("Probability (", italic("p"),")")), line = 2* fontsize, cex = fontsize)
+      mtext(side = 2, text = substitute(paste("w(", italic("p"),")")), line = 2* fontsize, cex = fontsize)
       
       # plot dashed line
       lines(a,a,col="black",lty=2,lwd=1)

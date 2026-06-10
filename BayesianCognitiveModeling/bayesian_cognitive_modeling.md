@@ -2,7 +2,7 @@ Bayesian Cognitive Modeling Tutorial
 ================
 Linus Hof & Nuno Busch
 
-Last updated: 2025-07-25
+Last updated: 2025-07-28
 
 ## Part I: Risky Choice and its Models
 
@@ -2416,3 +2416,48 @@ as a work-in-progress documentation of common errors that we have
 encountered, and what might be potential ways to solve them.
 
 We will continue expanding this section.
+
+### I). Node inconsistent with parents
+
+Sometimes you might get errors of the following format:
+
+    Error in checkForRemoteErrors(val) : 
+      8 nodes produced errors; first error: Error in node choices[31,22]
+    Node inconsistent with parents
+
+These are very common in JAGS and it is often not immediately clear what
+the cause is. It is recommendable to take a very close look at the
+underlying data at the specific datapoint. In this example, it would
+mean to check what the outcome and probability information of problem 31
+for person 22 is, that the model has to work with, and what the choice
+was that the individual made. Here, the individual chose option B
+(choice = 0):
+
+    > choices[31,22]
+    07-JE-SU-MU 
+              0 
+
+… even though the choice problem had a clear dominant option of a sure
+win in option A compared to a sure high loss in option B:
+
+    > prospectsA[31,,22]
+    [1]  150    1    0    0 -730    0
+    > prospectsB[31,,22]
+    [1]   810     0     0     0 -1000     1
+
+Consequently, the model would predict a choice of A, whereas the
+empirical data (the participant) chose otherwise. Safe options like this
+(where one probability = 1) can appear frequently in experience-based
+choice data, when people do not sample a lot.
+
+Here, the JAGS error might be caused by a computational problem, when
+the model predicts a choice probability of 0 which causes the model to
+crash. We can circumvent the problem in this case by constraining the
+predicted choice probability to a range between 0.00001 and 0.99999, for
+example. I.e., in the model code, we substitute
+
+    choices[i,j] ~ dbern(binval[i,j])
+
+with
+
+    choices[i,j] ~ dbern(min(max(binval[i,j],0.00001),0.99999))

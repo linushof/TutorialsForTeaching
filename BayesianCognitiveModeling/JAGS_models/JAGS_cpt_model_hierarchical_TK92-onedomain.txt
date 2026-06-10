@@ -63,7 +63,7 @@ model {
   mu.alpha    <- phi(mu.phi.alpha 		/ sqrt(1+ pow(sigma.phi.alpha, 2)))	*2
   mu.lambda   <- phi(mu.phi.lambda 		/ sqrt(1+ pow(sigma.phi.lambda,2)))	*5
   mu.gamma    <- phi(mu.phi.gamma  		/ sqrt(1+ pow(sigma.phi.gamma, 2)))	*2 
-  mu.theta    <- phi(mu.phi.theta  		/ sqrt(1+ pow(sigma.phi.theta, 2)))	*5
+  mu.theta    <- phi(mu.phi.theta  		/ sqrt(1+ pow(sigma.phi.theta, 2)))	*10
 
 
 
